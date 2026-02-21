@@ -1,0 +1,47 @@
+{
+  "kind": "feature_evidence_report",
+  "features": [
+    {
+      "featureId": "feature-fix-the-user-collection-view-in-userdashboard-to-properly-fetch-and-display-all-minted-nfts-with-their-images-and-full-metadata-information",
+      "featureTitle": "Fix the user collection view in UserDashboard to properly fetch and display all minted NFTs with their images and full metadata information",
+      "files": [
+        "frontend/src/hooks/useQueries.ts",
+        "frontend/src/pages/UserDashboard.tsx"
+      ],
+      "components": [
+        "authorization@1.0.1",
+        "blob-storage@2.0.3",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-3"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-verify-that-the-mint-flow-in-admindashboard-correctly-uploads-images-to-backend-blob-storage-and-receives-confirmation-of-successful-nft-creation-before-showing-success-message",
+      "featureTitle": "Verify that the mint flow in AdminDashboard correctly uploads images to backend blob storage and receives confirmation of successful NFT creation before showing success message",
+      "files": [
+        "frontend/src/hooks/useQueries.ts",
+        "frontend/src/pages/AdminDashboard.tsx"
+      ],
+      "components": [
+        "authorization@1.0.1",
+        "blob-storage@2.0.3",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-4"
+      ],
+      "confidence": "high"
+    }
+  ]
+}

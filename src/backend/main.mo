@@ -12,29 +12,14 @@ import Storage "blob-storage/Storage";
 import MixinStorage "blob-storage/Mixin";
 import List "mo:base/List";
 
+import Migration "migration";
 
-
-persistent actor BonsaiNFT {
+(with migration = Migration.run)
+actor BonsaiNFT {
   let accessControlState = AccessControl.initState();
 
   let storage = Storage.new();
   include MixinStorage(storage);
-
-  // Helper function to ensure user is initialized
-  func ensureUserInitialized(caller : Principal) {
-    if (Principal.isAnonymous(caller)) {
-      Debug.trap("Anonymous users cannot perform this action");
-    };
-
-    let currentRole = AccessControl.getUserRole(accessControlState, caller);
-
-    switch (currentRole) {
-      case (#guest) {
-        AccessControl.initialize(accessControlState, caller);
-      };
-      case (_) {};
-    };
-  };
 
   public shared ({ caller }) func initializeAccessControl() : async () {
     AccessControl.initialize(accessControlState, caller);
@@ -45,12 +30,6 @@ persistent actor BonsaiNFT {
   };
 
   public shared ({ caller }) func assignCallerUserRole(user : Principal, role : AccessControl.UserRole) : async () {
-    if (not (AccessControl.isAdmin(accessControlState, caller))) {
-      Debug.trap("Unauthorized: Only the permanent admin can assign roles");
-    };
-    if (role == #admin) {
-      Debug.trap("Admin role cannot be reassigned");
-    };
     AccessControl.assignRole(accessControlState, caller, user, role);
   };
 
@@ -69,15 +48,6 @@ persistent actor BonsaiNFT {
   var userProfiles = principalMap.empty<UserProfile>();
 
   public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
-    if (Principal.isAnonymous(caller)) {
-      Debug.trap("Anonymous users cannot view profiles");
-    };
-
-    let currentRole = AccessControl.getUserRole(accessControlState, caller);
-    if (currentRole == #guest) {
-      return null;
-    };
-
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Debug.trap("Unauthorized: Only users can view profiles");
     };
@@ -85,10 +55,6 @@ persistent actor BonsaiNFT {
   };
 
   public query ({ caller }) func getUserProfile(user : Principal) : async ?UserProfile {
-    if (Principal.isAnonymous(caller)) {
-      Debug.trap("Anonymous users cannot view profiles");
-    };
-
     if (caller != user and not AccessControl.isAdmin(accessControlState, caller)) {
       Debug.trap("Unauthorized: Can only view your own profile");
     };
@@ -96,16 +62,9 @@ persistent actor BonsaiNFT {
   };
 
   public shared ({ caller }) func saveCallerUserProfile(profile : UserProfile) : async () {
-    if (Principal.isAnonymous(caller)) {
-      Debug.trap("Anonymous users cannot save profiles");
-    };
-
-    ensureUserInitialized(caller);
-
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Debug.trap("Unauthorized: Only users can save profiles");
     };
-
     userProfiles := principalMap.put(userProfiles, caller, profile);
   };
 
@@ -119,12 +78,6 @@ persistent actor BonsaiNFT {
   var addressBooks = principalMap.empty<[AddressBookEntry]>();
 
   public shared ({ caller }) func addAddressBookEntry(principal : Principal, nickname : Text) : async () {
-    if (Principal.isAnonymous(caller)) {
-      Debug.trap("Anonymous users cannot manage address book");
-    };
-
-    ensureUserInitialized(caller);
-
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Debug.trap("Unauthorized: Only users can manage address book");
     };
@@ -145,12 +98,6 @@ persistent actor BonsaiNFT {
   };
 
   public shared ({ caller }) func updateAddressBookEntry(principal : Principal, newNickname : Text) : async () {
-    if (Principal.isAnonymous(caller)) {
-      Debug.trap("Anonymous users cannot manage address book");
-    };
-
-    ensureUserInitialized(caller);
-
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Debug.trap("Unauthorized: Only users can manage address book");
     };
@@ -179,12 +126,6 @@ persistent actor BonsaiNFT {
   };
 
   public shared ({ caller }) func deleteAddressBookEntry(principal : Principal) : async () {
-    if (Principal.isAnonymous(caller)) {
-      Debug.trap("Anonymous users cannot manage address book");
-    };
-
-    ensureUserInitialized(caller);
-
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Debug.trap("Unauthorized: Only users can manage address book");
     };
@@ -203,12 +144,8 @@ persistent actor BonsaiNFT {
   };
 
   public query ({ caller }) func getAddressBook() : async [AddressBookEntry] {
-    if (Principal.isAnonymous(caller)) {
-      Debug.trap("Anonymous users cannot view address book");
-    };
-
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      return [];
+      Debug.trap("Unauthorized: Only users can view address book");
     };
 
     switch (principalMap.get(addressBooks, caller)) {
@@ -244,6 +181,27 @@ persistent actor BonsaiNFT {
     provenance : ProvenanceID;
   };
 
+  public type NFTData = {
+    id : Nat;
+    name : Text;
+    collection : Text;
+    product : Text;
+    verified : Bool;
+    discountCode : Text;
+    mystery : Bool;
+    redeemed : Bool;
+    asset_class : Text;
+    certification : Text;
+    provenance_id : Text;
+    manufacturer_details : Text;
+    issue_date : Text;
+    media_assets : [Storage.ExternalBlob];
+    provenance : ProvenanceID;
+    owner : Principal;
+    creationTimestamp : Time.Time;
+    origyn_metadata : ORIGYNMetadata;
+  };
+
   public type TransactionType = {
     #mint;
     #burn;
@@ -269,6 +227,7 @@ persistent actor BonsaiNFT {
 
   transient let natMap = OrderedMap.Make<Nat>(Nat.compare);
   var nftStore = natMap.empty<ORIGYNMetadata>();
+  var fullNFTStore = natMap.empty<NFTData>();
 
   var ownership = principalMap.empty<[Nat]>();
   var redemptionHistory = principalMap.empty<[RedemptionRecord]>();
@@ -312,10 +271,6 @@ persistent actor BonsaiNFT {
   };
 
   public shared ({ caller }) func mintNFT(metadata : ORIGYNMetadata, mediaAssets : [Storage.ExternalBlob]) : async Nat {
-    if (Principal.isAnonymous(caller)) {
-      Debug.trap("Anonymous users cannot mint NFTs");
-    };
-
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Debug.trap("Unauthorized: Only admins can mint NFTs");
     };
@@ -328,6 +283,28 @@ persistent actor BonsaiNFT {
       media_assets = mediaAssets;
     };
 
+    let fullNFTData : NFTData = {
+      id = nftId;
+      name = newMetadata.name;
+      collection = newMetadata.collection;
+      product = newMetadata.product;
+      verified = newMetadata.verified;
+      discountCode = newMetadata.discountCode;
+      mystery = newMetadata.mystery;
+      redeemed = newMetadata.redeemed;
+      asset_class = newMetadata.asset_class;
+      certification = newMetadata.certification;
+      provenance_id = newMetadata.provenance_id;
+      manufacturer_details = newMetadata.manufacturer_details;
+      issue_date = newMetadata.issue_date;
+      media_assets = newMetadata.media_assets;
+      provenance = newMetadata.provenance;
+      owner = caller;
+      creationTimestamp = Time.now();
+      origyn_metadata = newMetadata;
+    };
+
+    fullNFTStore := natMap.put(fullNFTStore, nftId, fullNFTData);
     nftStore := natMap.put(nftStore, nftId, newMetadata);
     addNFTToOwner(caller, nftId);
     nextNftId += 1;
@@ -347,10 +324,6 @@ persistent actor BonsaiNFT {
   };
 
   public shared ({ caller }) func batchMintNFTs(metadataList : [ORIGYNMetadata], mediaAssetsList : [[Storage.ExternalBlob]]) : async [Nat] {
-    if (Principal.isAnonymous(caller)) {
-      Debug.trap("Anonymous users cannot mint NFTs");
-    };
-
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Debug.trap("Unauthorized: Only admins can mint NFTs");
     };
@@ -372,6 +345,28 @@ persistent actor BonsaiNFT {
         media_assets = mediaAssets;
       };
 
+      let fullNFTData : NFTData = {
+        id = nftId;
+        name = newMetadata.name;
+        collection = newMetadata.collection;
+        product = newMetadata.product;
+        verified = newMetadata.verified;
+        discountCode = newMetadata.discountCode;
+        mystery = newMetadata.mystery;
+        redeemed = newMetadata.redeemed;
+        asset_class = newMetadata.asset_class;
+        certification = newMetadata.certification;
+        provenance_id = newMetadata.provenance_id;
+        manufacturer_details = newMetadata.manufacturer_details;
+        issue_date = newMetadata.issue_date;
+        media_assets = newMetadata.media_assets;
+        provenance = newMetadata.provenance;
+        owner = caller;
+        creationTimestamp = Time.now();
+        origyn_metadata = newMetadata;
+      };
+
+      fullNFTStore := natMap.put(fullNFTStore, nftId, fullNFTData);
       nftStore := natMap.put(nftStore, nftId, newMetadata);
       addNFTToOwner(caller, nftId);
       buffer.add(nftId);
@@ -393,12 +388,6 @@ persistent actor BonsaiNFT {
   };
 
   public shared ({ caller }) func transferNFT(nftId : Nat, to : Principal) : async () {
-    if (Principal.isAnonymous(caller)) {
-      Debug.trap("Anonymous users cannot transfer NFTs");
-    };
-
-    ensureUserInitialized(caller);
-
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Debug.trap("Unauthorized: Only users can transfer NFTs");
     };
@@ -414,44 +403,52 @@ persistent actor BonsaiNFT {
           Debug.trap("Unauthorized: You do not own this NFT");
         };
 
-        var found = false;
-        var fromPrincipal : ?Principal = null;
-        for ((owner, nftIds) in principalMap.entries(ownership)) {
-          if (ownsNFT(owner, nftId)) {
-            removeNFTFromOwner(owner, nftId);
-            found := true;
-            fromPrincipal := ?owner;
+        switch (natMap.get(fullNFTStore, nftId)) {
+          case (null) { Debug.trap("NFT not found in full store") };
+          case (?nftData) {
+            if (nftData.owner != caller and not AccessControl.isAdmin(accessControlState, caller)) {
+              Debug.trap("Unauthorized: NFT owner mismatch");
+            };
+            let updatedNFT = {
+              nftData with
+              owner = to;
+            };
+            fullNFTStore := natMap.put(fullNFTStore, nftId, updatedNFT);
+
+            var found = false;
+            var fromPrincipal : ?Principal = null;
+            for ((owner, nftIds) in principalMap.entries(ownership)) {
+              if (ownsNFT(owner, nftId)) {
+                removeNFTFromOwner(owner, nftId);
+                found := true;
+                fromPrincipal := ?owner;
+              };
+            };
+
+            if (not found) {
+              Debug.trap("NFT has no current owner");
+            };
+
+            addNFTToOwner(to, nftId);
+
+            let transactionRecord : TransactionRecord = {
+              transactionType = #transfer;
+              nftId;
+              user = caller;
+              timestamp = Time.now();
+              metadata;
+              from = fromPrincipal;
+              to = ?to;
+            };
+
+            logTransaction(transactionRecord);
           };
         };
-
-        if (not found) {
-          Debug.trap("NFT has no current owner");
-        };
-
-        addNFTToOwner(to, nftId);
-
-        let transactionRecord : TransactionRecord = {
-          transactionType = #transfer;
-          nftId;
-          user = caller;
-          timestamp = Time.now();
-          metadata;
-          from = fromPrincipal;
-          to = ?to;
-        };
-
-        logTransaction(transactionRecord);
       };
     };
   };
 
   public shared ({ caller }) func burnNFT(nftId : Nat) : async () {
-    if (Principal.isAnonymous(caller)) {
-      Debug.trap("Anonymous users cannot burn NFTs");
-    };
-
-    ensureUserInitialized(caller);
-
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Debug.trap("Unauthorized: Only users can burn NFTs");
     };
@@ -475,7 +472,17 @@ persistent actor BonsaiNFT {
           media_assets = deepCopiedMediaAssets;
         };
 
-        nftStore := natMap.put(nftStore, nftId, updatedMetadata);
+        switch (natMap.get(fullNFTStore, nftId)) {
+          case (null) { Debug.trap("NFT not found in full store") };
+          case (?nftData) {
+            let updatedFullNFT = {
+              nftData with
+              redeemed = true;
+            };
+            fullNFTStore := natMap.put(fullNFTStore, nftId, updatedFullNFT);
+          };
+        };
+
         removeNFTFromOwner(caller, nftId);
 
         let redemptionRecord = {
@@ -508,12 +515,8 @@ persistent actor BonsaiNFT {
   };
 
   public query ({ caller }) func getOwnedNFTs() : async [ORIGYNMetadata] {
-    if (Principal.isAnonymous(caller)) {
-      Debug.trap("Anonymous users cannot view owned NFTs");
-    };
-
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      return [];
+      Debug.trap("Unauthorized: Only users can view owned NFTs");
     };
 
     switch (principalMap.get(ownership, caller)) {
@@ -532,12 +535,8 @@ persistent actor BonsaiNFT {
   };
 
   public query ({ caller }) func getRedemptionHistory() : async [RedemptionRecord] {
-    if (Principal.isAnonymous(caller)) {
-      Debug.trap("Anonymous users cannot view redemption history");
-    };
-
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      return [];
+      Debug.trap("Unauthorized: Only users can view redemption history");
     };
 
     switch (principalMap.get(redemptionHistory, caller)) {
@@ -547,12 +546,8 @@ persistent actor BonsaiNFT {
   };
 
   public query ({ caller }) func getTransactionHistory() : async [TransactionRecord] {
-    if (Principal.isAnonymous(caller)) {
-      Debug.trap("Anonymous users cannot view transaction history");
-    };
-
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      return [];
+      Debug.trap("Unauthorized: Only users can view transaction history");
     };
 
     switch (principalMap.get(transactionHistory, caller)) {
@@ -562,10 +557,6 @@ persistent actor BonsaiNFT {
   };
 
   public query ({ caller }) func getAllTransactionHistory() : async [TransactionRecord] {
-    if (Principal.isAnonymous(caller)) {
-      Debug.trap("Anonymous users cannot view all transaction history");
-    };
-
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Debug.trap("Unauthorized: Only admins can view all transaction history");
     };
@@ -580,10 +571,6 @@ persistent actor BonsaiNFT {
   };
 
   public query ({ caller }) func getAllNFTs() : async [ORIGYNMetadata] {
-    if (Principal.isAnonymous(caller)) {
-      Debug.trap("Anonymous users cannot view all NFTs");
-    };
-
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Debug.trap("Unauthorized: Only admins can view all NFTs");
     };
@@ -591,10 +578,6 @@ persistent actor BonsaiNFT {
   };
 
   public shared ({ caller }) func toggleLeaderboardVisibility() : async () {
-    if (Principal.isAnonymous(caller)) {
-      Debug.trap("Anonymous users cannot toggle leaderboard visibility");
-    };
-
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Debug.trap("Unauthorized: Only admins can toggle leaderboard visibility");
     };
@@ -602,10 +585,6 @@ persistent actor BonsaiNFT {
   };
 
   public query ({ caller }) func getLeaderboard() : async [(Principal, Nat)] {
-    if (Principal.isAnonymous(caller)) {
-      Debug.trap("Anonymous users cannot view leaderboard");
-    };
-
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Debug.trap("Unauthorized: Only authenticated users can view leaderboard");
     };
@@ -630,10 +609,6 @@ persistent actor BonsaiNFT {
   };
 
   public query ({ caller }) func getArchivedNFT(nftId : Nat) : async ORIGYNMetadata {
-    if (Principal.isAnonymous(caller)) {
-      Debug.trap("Anonymous users cannot view archived NFTs");
-    };
-
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Debug.trap("Unauthorized: Only admins can view archived NFTs");
     };
@@ -647,6 +622,32 @@ persistent actor BonsaiNFT {
         metadata;
       };
     };
+  };
+
+  public query ({ caller }) func getUserNFTs() : async [NFTData] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Debug.trap("Unauthorized: Only users can view NFTs");
+    };
+
+    let ownedNFTs = switch (principalMap.get(ownership, caller)) {
+      case (null) { [] };
+      case (?nftIds) { nftIds };
+    };
+
+    let buffer = Buffer.Buffer<NFTData>(ownedNFTs.size());
+
+    for (nftId in ownedNFTs.vals()) {
+      switch (natMap.get(fullNFTStore, nftId)) {
+        case (null) {};
+        case (?nftData) {
+          if (nftData.owner == caller) {
+            buffer.add(nftData);
+          };
+        };
+      };
+    };
+
+    Buffer.toArray(buffer);
   };
 };
 

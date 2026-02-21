@@ -1,0 +1,54 @@
+{
+  "kind": "implementation_plan",
+  "version": "1.0",
+  "title": "Fix NFT minting persistence and collection display",
+  "requirements": [
+    {
+      "id": "REQ-3",
+      "summary": "Fix the user collection view in UserDashboard to properly fetch and display all minted NFTs with their images and full metadata information",
+      "acceptanceCriteria": [
+        "Collection view fetches NFTs using useUserNFTs query hook",
+        "Each NFT card displays the uploaded image using the blob URL",
+        "NFT metadata is visible including name, description, and provenance details",
+        "Collection updates immediately after successful mint without requiring page refresh",
+        "Images load correctly from canister blob storage",
+        "Loading states and error handling are implemented"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Verify and fix the useUserNFTs hook to correctly call the getUserNFTs backend capability and return NFTData[] with complete metadata including id, owner, media_assets (ExternalBlob[]), origyn_metadata, and provenance. Ensure the hook properly handles loading, error states, and is enabled only when actor and authentication are available. Add queryKey ['userNFTs', identity] to ensure refetch on identity change."
+        },
+        {
+          "path": "frontend/src/pages/UserDashboard.tsx",
+          "operation": "modify",
+          "description": "Update the NFT collection display section to use the useUserNFTs hook instead of useOwnedNFTs. For each NFT in the returned NFTData[], render an NFT card that displays: (1) the first media asset image using blob.getDirectURL() for the ExternalBlob, (2) the NFT name from nft.name or nft.origyn_metadata.name, (3) provenance details including product name, batch number, and creation date from nft.provenance, (4) token ID from nft.id. Implement proper loading skeleton states while data is fetching. Add error boundary or error message display if the query fails. Ensure the component properly handles empty arrays (no NFTs) by showing a helpful message like 'No NFTs in your collection yet'."
+        }
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "summary": "Verify that the mint flow in AdminDashboard correctly uploads images to backend blob storage and receives confirmation of successful NFT creation before showing success message",
+      "acceptanceCriteria": [
+        "Image upload completes and returns blob ID before NFT minting",
+        "Mint function waits for backend confirmation before invalidating queries",
+        "Success message only shows after NFT is confirmed stored in backend",
+        "React Query cache is properly invalidated to trigger collection refetch",
+        "Error handling catches and displays any storage failures"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/AdminDashboard.tsx",
+          "operation": "modify",
+          "description": "Review and fix the single NFT minting flow to ensure: (1) image files are converted to ExternalBlob using ExternalBlob.fromBytes() before calling mintNFT, (2) the mintNFT mutation awaits the backend response and captures the returned token ID (bigint), (3) success toast is shown only after the backend confirms successful storage with the token ID, (4) React Query invalidation includes both ['userNFTs'] and ['ownedNFTs'] queryKeys to trigger refetch in UserDashboard, (5) error handling wraps the entire flow with try-catch and displays specific error messages for upload failures vs minting failures. Verify the useMintNFT hook in useQueries.ts properly calls actor.mintNFT with the ORIGYNMetadata and ExternalBlob[] parameters."
+        },
+        {
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Verify the useMintNFT mutation hook correctly: (1) accepts metadata (ORIGYNMetadata) and mediaAssets (ExternalBlob[]) as parameters, (2) calls actor.mintNFT(metadata, mediaAssets) and awaits the result, (3) returns the token ID (bigint) from the backend, (4) includes onSuccess callback that invalidates ['userNFTs'], ['ownedNFTs'], and ['allNFTs'] queryKeys to trigger refetch across all NFT views. Add proper error handling that throws descriptive errors if the actor is unavailable or the mint fails."
+        }
+      ]
+    }
+  ]
+}

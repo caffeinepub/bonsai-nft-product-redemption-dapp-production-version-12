@@ -298,7 +298,7 @@ export default function AdminDashboard() {
       mintNFT(
         { metadata, mediaAssets: mintForm.selectedArtwork },
         {
-          onSuccess: () => {
+          onSuccess: (tokenId) => {
             setShowMintDialog(false);
             // Reset form
             setMintForm({
@@ -321,6 +321,9 @@ export default function AdminDashboard() {
               provenanceAttributes: [{ trait_type: '', value: '' }],
             });
           },
+          onError: (error) => {
+            console.error('Mint failed:', error);
+          }
         }
       );
     } catch (error) {
@@ -381,7 +384,7 @@ export default function AdminDashboard() {
       batchMintNFTs(
         { metadataList, mediaAssetsList },
         {
-          onSuccess: () => {
+          onSuccess: (tokenIds) => {
             setShowBatchMintDialog(false);
             // Reset form
             setBatchForm({
@@ -404,6 +407,9 @@ export default function AdminDashboard() {
               provenanceAttributes: [{ trait_type: '', value: '' }],
             });
           },
+          onError: (error) => {
+            console.error('Batch mint failed:', error);
+          }
         }
       );
     } catch (error) {
@@ -498,145 +504,146 @@ export default function AdminDashboard() {
     }
   };
 
-  const maskPhysicalHash = (hash: string) => {
-    if (!hash) return 'N/A';
-    if (hash.length <= 12) return hash;
-    return `${hash.slice(0, 6)}...${hash.slice(-6)}`;
-  };
-
-  const handleViewRedemption = (redemption: TransactionRecord) => {
-    setSelectedRedemption(redemption);
-    setShowRedemptionDetails(true);
-  };
-
   if (adminCheckLoading) {
     return (
-      <div className="container mx-auto px-4 py-12">
-        <Skeleton className="h-40 w-full" />
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto" />
+          <p className="text-muted-foreground">Verifying admin access...</p>
+        </div>
       </div>
     );
   }
 
   if (!isAdmin) {
     return (
-      <div className="container mx-auto px-4 py-12">
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            You don't have admin privileges. Only the permanent admin can access this dashboard.
-          </AlertDescription>
-        </Alert>
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <Card className="max-w-md w-full border-2 border-destructive/50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-destructive">
+              <Lock className="h-6 w-6" />
+              Access Denied
+            </CardTitle>
+            <CardDescription>
+              You do not have administrator privileges to access this dashboard.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                This area is restricted to administrators only. Please contact the system administrator if you believe you should have access.
+              </AlertDescription>
+            </Alert>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
-  const totalNFTs = allNFTs?.length ?? 0;
-  const redeemedNFTs = allNFTs?.filter((nft) => nft.redeemed).length ?? 0;
-  const activeNFTs = totalNFTs - redeemedNFTs;
-
   return (
-    <div className="container mx-auto px-4 py-8">
-      {/* Header */}
-      <div className="flex items-center gap-3 mb-4">
-        <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-          <Shield className="h-6 w-6 text-primary" />
-        </div>
-        <div>
-          <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-          <p className="text-muted-foreground">Manage ORIGYN-compliant NFTs with provenance tracking</p>
-        </div>
-      </div>
-
-      {/* Admin Notice */}
-      <Alert className="mb-8 border-primary/20 bg-primary/5">
-        <Lock className="h-4 w-4 text-primary" />
-        <AlertDescription>
-          You are the <strong>permanent administrator</strong> of this application. Admin privileges cannot be transferred or reassigned to ensure security and consistency.
-        </AlertDescription>
-      </Alert>
-
-      {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total NFTs</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalNFTs}</div>
-            <p className="text-xs text-muted-foreground">All minted NFTs</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active NFTs</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{activeNFTs}</div>
-            <p className="text-xs text-muted-foreground">Not yet redeemed</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Redeemed</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{redeemedNFTs}</div>
-            <p className="text-xs text-muted-foreground">Burned NFTs</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Leaderboard</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between">
-              <Badge variant={leaderboardVisible ? 'default' : 'secondary'}>
-                {leaderboardVisible ? 'Visible' : 'Hidden'}
-              </Badge>
+    <div className="min-h-screen bg-background p-4 md:p-8">
+      <div className="max-w-7xl mx-auto space-y-8">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-bold text-foreground flex items-center gap-3">
+              <Shield className="h-10 w-10 text-primary" />
+              Admin Dashboard
+            </h1>
+            <p className="text-muted-foreground mt-2">Manage NFTs, users, and system settings</p>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Label htmlFor="leaderboard-toggle" className="text-sm">Leaderboard Visible</Label>
               <Switch
+                id="leaderboard-toggle"
                 checked={leaderboardVisible}
                 onCheckedChange={() => toggleLeaderboard()}
                 disabled={isTogglingLeaderboard}
               />
             </div>
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        </div>
 
-      {/* Main Content */}
-      <Tabs defaultValue="nfts" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="nfts">All NFTs</TabsTrigger>
-          <TabsTrigger value="redemptions">Redemption History</TabsTrigger>
-          <TabsTrigger value="mint">Mint NFTs</TabsTrigger>
-        </TabsList>
-
-        {/* All NFTs Tab */}
-        <TabsContent value="nfts" className="space-y-4">
-          <Card>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Card className="border-2 border-primary/20">
             <CardHeader>
-              <CardTitle>NFT Management</CardTitle>
-              <CardDescription>View and manage all ORIGYN-compliant NFTs with provenance data</CardDescription>
+              <CardTitle className="text-sm font-medium text-muted-foreground">Total NFTs</CardTitle>
             </CardHeader>
             <CardContent>
-              {nftsLoading ? (
-                <Skeleton className="h-40 w-full" />
-              ) : allNFTs && allNFTs.length > 0 ? (
-                <ScrollArea className="h-[600px]">
-                  <div className="rounded-md border">
+              <p className="text-3xl font-bold text-primary">{allNFTs?.length || 0}</p>
+            </CardContent>
+          </Card>
+          <Card className="border-2 border-accent/20">
+            <CardHeader>
+              <CardTitle className="text-sm font-medium text-muted-foreground">Total Transactions</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-3xl font-bold text-accent">{allTransactions?.length || 0}</p>
+            </CardContent>
+          </Card>
+          <Card className="border-2 border-secondary/20">
+            <CardHeader>
+              <CardTitle className="text-sm font-medium text-muted-foreground">Redemptions</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-3xl font-bold text-secondary">{redemptionHistory.length}</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        <Tabs defaultValue="nfts" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="nfts">NFT Management</TabsTrigger>
+            <TabsTrigger value="redemptions">Redemptions</TabsTrigger>
+            <TabsTrigger value="transactions">All Transactions</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="nfts" className="space-y-4">
+            <div className="flex gap-4">
+              <Button
+                onClick={() => setShowMintDialog(true)}
+                className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Mint Single NFT
+              </Button>
+              <Button
+                onClick={() => setShowBatchMintDialog(true)}
+                variant="outline"
+                className="border-primary/30"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Batch Mint NFTs
+              </Button>
+            </div>
+
+            {nftsLoading ? (
+              <div className="space-y-4">
+                {[...Array(3)].map((_, i) => (
+                  <Card key={i}>
+                    <CardContent className="p-6">
+                      <Skeleton className="h-6 w-1/3 mb-2" />
+                      <Skeleton className="h-4 w-1/2" />
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : allNFTs && allNFTs.length > 0 ? (
+              <Card>
+                <CardHeader>
+                  <CardTitle>All NFTs</CardTitle>
+                  <CardDescription>Manage all minted NFTs in the system</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ScrollArea className="h-[600px]">
                     <Table>
                       <TableHeader>
                         <TableRow>
                           <TableHead>ID</TableHead>
-                          <TableHead>Artwork</TableHead>
                           <TableHead>Name</TableHead>
                           <TableHead>Collection</TableHead>
-                          <TableHead>Asset Class</TableHead>
-                          <TableHead>Provenance ID</TableHead>
-                          <TableHead>Batch</TableHead>
+                          <TableHead>Product</TableHead>
                           <TableHead>Status</TableHead>
                           <TableHead>Actions</TableHead>
                         </TableRow>
@@ -644,532 +651,478 @@ export default function AdminDashboard() {
                       <TableBody>
                         {allNFTs.map((nft) => (
                           <TableRow key={nft.id.toString()}>
-                            <TableCell className="font-mono text-sm">{nft.id.toString()}</TableCell>
-                            <TableCell>
-                              {nft.media_assets.length > 0 ? (
-                                <img
-                                  src={getMediaAssetDisplayUrl(nft.media_assets[0])}
-                                  alt={nft.name}
-                                  className="w-12 h-12 object-cover rounded"
-                                />
-                              ) : (
-                                <div className="w-12 h-12 bg-muted rounded flex items-center justify-center text-xs">
-                                  No Art
-                                </div>
-                              )}
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                {nft.name}
-                                {nft.verified && <CheckCircle className="h-4 w-4 text-primary" />}
-                              </div>
-                            </TableCell>
+                            <TableCell className="font-mono">{nft.id.toString()}</TableCell>
+                            <TableCell className="font-medium">{nft.name}</TableCell>
                             <TableCell>{nft.collection}</TableCell>
-                            <TableCell>{nft.asset_class || 'N/A'}</TableCell>
-                            <TableCell className="font-mono text-xs">{nft.provenance_id || 'N/A'}</TableCell>
-                            <TableCell className="text-xs">{nft.provenance.batchNumber || 'N/A'}</TableCell>
+                            <TableCell>{nft.product}</TableCell>
                             <TableCell>
-                              <Badge variant={nft.redeemed ? 'secondary' : 'default'}>
-                                {nft.redeemed ? 'Redeemed' : 'Active'}
-                              </Badge>
+                              {nft.redeemed ? (
+                                <Badge variant="secondary">Redeemed</Badge>
+                              ) : (
+                                <Badge variant="default">Active</Badge>
+                              )}
                             </TableCell>
                             <TableCell>
-                              {!nft.redeemed && (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => {
-                                    setSelectedNFT(nft);
-                                    setShowTransferDialog(true);
-                                  }}
-                                >
-                                  <Send className="h-4 w-4 mr-1" />
-                                  Transfer
-                                </Button>
-                              )}
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedNFT(nft);
+                                  setShowTransferDialog(true);
+                                }}
+                                disabled={nft.redeemed}
+                              >
+                                <Send className="h-3 w-3 mr-1" />
+                                Transfer
+                              </Button>
                             </TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
                     </Table>
-                  </div>
-                </ScrollArea>
-              ) : (
-                <div className="text-center py-12 text-muted-foreground">
-                  No NFTs minted yet. Start by minting your first ORIGYN-compliant NFT!
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Redemption History Tab */}
-        <TabsContent value="redemptions" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <History className="h-5 w-5 text-primary animate-ember-float" />
-                Redemption History (Archived NFTs)
-              </CardTitle>
-              <CardDescription>
-                Complete archive of all burned NFTs with preserved provenance data and media assets
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {transactionsLoading ? (
-                <div className="space-y-3">
-                  {[1, 2, 3].map((i) => (
-                    <Skeleton key={i} className="h-32 w-full" />
-                  ))}
-                </div>
-              ) : redemptionHistory.length > 0 ? (
-                <ScrollArea className="h-[600px] pr-4">
-                  <div className="space-y-4">
-                    {redemptionHistory.map((record, index) => (
-                      <Card
-                        key={`${record.nftId}-${record.timestamp}-${index}`}
-                        className="border-primary/20 card-fiery-hover animate-glow-entrance"
-                        style={{ animationDelay: `${index * 0.05}s` }}
-                      >
-                        <CardContent className="py-4">
-                          <div className="flex items-start justify-between gap-4">
-                            <div className="flex gap-4 flex-1">
-                              {record.metadata.media_assets.length > 0 && (
-                                <div className="relative flex-shrink-0">
-                                  <img
-                                    src={getMediaAssetDisplayUrl(record.metadata.media_assets[0])}
-                                    alt={record.metadata.name}
-                                    className="w-24 h-24 object-cover rounded border-2 border-primary/20"
-                                  />
-                                  <div className="absolute inset-0 bg-gradient-to-t from-primary/30 to-transparent rounded" />
-                                </div>
-                              )}
-                              <div className="space-y-2 flex-1">
-                                <div className="flex items-center gap-2">
-                                  <h4 className="font-semibold text-lg">{record.metadata.name}</h4>
-                                  <Badge variant="outline">{record.metadata.collection}</Badge>
-                                  {record.metadata.verified && (
-                                    <Badge variant="default" className="gap-1">
-                                      <CheckCircle className="h-3 w-3" />
-                                      Verified
-                                    </Badge>
-                                  )}
-                                </div>
-                                <div className="grid grid-cols-2 gap-2 text-sm">
-                                  <div>
-                                    <span className="text-muted-foreground">Product: </span>
-                                    <span className="font-medium">{record.metadata.provenance.productName || record.metadata.product}</span>
-                                  </div>
-                                  {record.metadata.provenance.batchNumber && (
-                                    <div>
-                                      <span className="text-muted-foreground">Batch: </span>
-                                      <span className="font-mono text-xs">{record.metadata.provenance.batchNumber}</span>
-                                    </div>
-                                  )}
-                                  {record.metadata.provenance_id && (
-                                    <div className="col-span-2">
-                                      <span className="text-muted-foreground">Provenance ID: </span>
-                                      <span className="font-mono text-xs">{record.metadata.provenance_id}</span>
-                                    </div>
-                                  )}
-                                  {record.metadata.provenance.physicalHash && (
-                                    <div className="col-span-2">
-                                      <span className="text-muted-foreground">Hash: </span>
-                                      <span className="font-mono text-xs">{maskPhysicalHash(record.metadata.provenance.physicalHash)}</span>
-                                    </div>
-                                  )}
-                                </div>
-                                <div className="flex items-center gap-2 pt-2">
-                                  <Badge variant="secondary" className="font-mono">
-                                    {record.metadata.discountCode}
-                                  </Badge>
-                                  {record.metadata.certification && (
-                                    <Badge variant="outline" className="gap-1">
-                                      <Shield className="h-3 w-3" />
-                                      {record.metadata.certification}
-                                    </Badge>
-                                  )}
-                                </div>
-                                <div className="flex items-center gap-4 text-xs text-muted-foreground pt-2 border-t">
-                                  <div>
-                                    <span>User: </span>
-                                    <span className="font-mono">{record.user.toString().slice(0, 12)}...</span>
-                                  </div>
-                                  <div>
-                                    <span>Redeemed: </span>
-                                    <span>{new Date(Number(record.timestamp) / 1000000).toLocaleString()}</span>
-                                  </div>
-                                  <div>
-                                    <span>NFT ID: </span>
-                                    <span className="font-mono">#{record.nftId.toString()}</span>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                            <div className="flex flex-col items-end gap-2">
-                              <Flame className="h-6 w-6 text-destructive flex-shrink-0 animate-flicker" />
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleViewRedemption(record)}
-                                className="gap-2"
-                              >
-                                <Package className="h-4 w-4" />
-                                Details
-                              </Button>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                </ScrollArea>
-              ) : (
-                <div className="text-center py-12">
-                  <History className="h-16 w-16 text-muted-foreground mx-auto mb-4 animate-ember-float" />
-                  <h3 className="text-xl font-semibold mb-2">No Redemptions Yet</h3>
-                  <p className="text-muted-foreground">
-                    Redeemed NFTs will appear here with their complete provenance data and media assets preserved
+                  </ScrollArea>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center py-16">
+                  <Package className="h-16 w-16 text-muted-foreground/50 mb-4" />
+                  <h3 className="text-xl font-semibold text-foreground mb-2">No NFTs minted yet</h3>
+                  <p className="text-muted-foreground text-center max-w-md mb-6">
+                    Start by minting your first NFT using the buttons above.
                   </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
 
-        {/* Mint NFTs Tab */}
-        <TabsContent value="mint" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Single Mint Card */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Mint Single NFT</CardTitle>
-                <CardDescription>Create an ORIGYN-compliant NFT with provenance data</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button className="w-full gap-2" onClick={() => setShowMintDialog(true)}>
-                  <Plus className="h-4 w-4" />
-                  Mint Single NFT
-                </Button>
-              </CardContent>
-            </Card>
+          <TabsContent value="redemptions" className="space-y-4">
+            {transactionsLoading ? (
+              <div className="space-y-4">
+                {[...Array(3)].map((_, i) => (
+                  <Card key={i}>
+                    <CardContent className="p-6">
+                      <Skeleton className="h-6 w-1/3 mb-2" />
+                      <Skeleton className="h-4 w-1/2" />
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : redemptionHistory.length > 0 ? (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Redemption History</CardTitle>
+                  <CardDescription>All NFT redemptions across the platform</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ScrollArea className="h-[600px]">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>NFT ID</TableHead>
+                          <TableHead>NFT Name</TableHead>
+                          <TableHead>User</TableHead>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {redemptionHistory.map((record, index) => (
+                          <TableRow key={index}>
+                            <TableCell className="font-mono">{record.nftId.toString()}</TableCell>
+                            <TableCell className="font-medium">{record.metadata.name}</TableCell>
+                            <TableCell className="font-mono text-xs">{record.user.toString().slice(0, 20)}...</TableCell>
+                            <TableCell>{new Date(Number(record.timestamp) / 1000000).toLocaleDateString()}</TableCell>
+                            <TableCell>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedRedemption(record);
+                                  setShowRedemptionDetails(true);
+                                }}
+                              >
+                                View Details
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </ScrollArea>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center py-16">
+                  <History className="h-16 w-16 text-muted-foreground/50 mb-4" />
+                  <h3 className="text-xl font-semibold text-foreground mb-2">No redemptions yet</h3>
+                  <p className="text-muted-foreground text-center max-w-md">
+                    Redemption history will appear here once users start redeeming NFTs.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
 
-            {/* Batch Mint Card */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Batch Mint NFTs</CardTitle>
-                <CardDescription>Create multiple ORIGYN-compliant NFTs with provenance</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button className="w-full gap-2" variant="secondary" onClick={() => setShowBatchMintDialog(true)}>
-                  <Plus className="h-4 w-4" />
-                  Batch Mint NFTs
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-      </Tabs>
+          <TabsContent value="transactions" className="space-y-4">
+            {transactionsLoading ? (
+              <div className="space-y-4">
+                {[...Array(3)].map((_, i) => (
+                  <Card key={i}>
+                    <CardContent className="p-6">
+                      <Skeleton className="h-6 w-1/3 mb-2" />
+                      <Skeleton className="h-4 w-1/2" />
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : allTransactions && allTransactions.length > 0 ? (
+              <Card>
+                <CardHeader>
+                  <CardTitle>All Transactions</CardTitle>
+                  <CardDescription>Complete transaction history across the platform</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ScrollArea className="h-[600px]">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Type</TableHead>
+                          <TableHead>NFT ID</TableHead>
+                          <TableHead>User</TableHead>
+                          <TableHead>Date</TableHead>
+                          <TableHead>From/To</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {allTransactions.map((tx, index) => (
+                          <TableRow key={index}>
+                            <TableCell>
+                              <Badge
+                                variant={
+                                  tx.transactionType === 'mint'
+                                    ? 'default'
+                                    : tx.transactionType === 'burn'
+                                    ? 'secondary'
+                                    : 'outline'
+                                }
+                              >
+                                {tx.transactionType}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="font-mono">{tx.nftId.toString()}</TableCell>
+                            <TableCell className="font-mono text-xs">{tx.user.toString().slice(0, 20)}...</TableCell>
+                            <TableCell>{new Date(Number(tx.timestamp) / 1000000).toLocaleDateString()}</TableCell>
+                            <TableCell className="font-mono text-xs">
+                              {tx.from && <div>From: {tx.from.toString().slice(0, 15)}...</div>}
+                              {tx.to && <div>To: {tx.to.toString().slice(0, 15)}...</div>}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </ScrollArea>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center py-16">
+                  <History className="h-16 w-16 text-muted-foreground/50 mb-4" />
+                  <h3 className="text-xl font-semibold text-foreground mb-2">No transactions yet</h3>
+                  <p className="text-muted-foreground text-center max-w-md">
+                    Transaction history will appear here once activity begins.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+        </Tabs>
+      </div>
 
       {/* Single Mint Dialog */}
       <Dialog open={showMintDialog} onOpenChange={setShowMintDialog}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Mint ORIGYN-Compliant NFT</DialogTitle>
-            <DialogDescription>Create a new NFT with complete provenance tracking</DialogDescription>
+            <DialogTitle className="flex items-center gap-2">
+              <Flame className="h-5 w-5 text-primary" />
+              Mint New NFT
+            </DialogTitle>
+            <DialogDescription>
+              Create a new ORIGYN-compliant NFT with complete provenance tracking
+            </DialogDescription>
           </DialogHeader>
-          <div className="space-y-6 py-4">
-            {/* Basic Information */}
-            <div className="space-y-4">
-              <h3 className="font-semibold text-sm">Basic Information</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Name *</Label>
-                  <Input
-                    id="name"
-                    value={mintForm.name}
-                    onChange={(e) => setMintForm({ ...mintForm, name: e.target.value })}
-                    placeholder="Bonsai NFT #1"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="collection">Collection *</Label>
-                  <Input
-                    id="collection"
-                    value={mintForm.collection}
-                    onChange={(e) => setMintForm({ ...mintForm, collection: e.target.value })}
-                    placeholder="Spring Collection"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="product">Product *</Label>
-                  <Input
-                    id="product"
-                    value={mintForm.product}
-                    onChange={(e) => setMintForm({ ...mintForm, product: e.target.value })}
-                    placeholder="Premium Bonsai Kit"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="discountCode">Discount Code *</Label>
-                  <Input
-                    id="discountCode"
-                    value={mintForm.discountCode}
-                    onChange={(e) => setMintForm({ ...mintForm, discountCode: e.target.value })}
-                    placeholder="BONSAI001"
-                  />
-                </div>
-              </div>
-            </div>
 
-            {/* ORIGYN Metadata */}
-            <div className="space-y-4">
-              <h3 className="font-semibold text-sm">ORIGYN Metadata</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="asset_class">Asset Class</Label>
-                  <Input
-                    id="asset_class"
-                    value={mintForm.asset_class}
-                    onChange={(e) => setMintForm({ ...mintForm, asset_class: e.target.value })}
-                    placeholder="Physical Product"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="certification">Certification</Label>
-                  <Input
-                    id="certification"
-                    value={mintForm.certification}
-                    onChange={(e) => setMintForm({ ...mintForm, certification: e.target.value })}
-                    placeholder="Certified Authentic"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="manufacturer_details">Manufacturer</Label>
-                  <Input
-                    id="manufacturer_details"
-                    value={mintForm.manufacturer_details}
-                    onChange={(e) => setMintForm({ ...mintForm, manufacturer_details: e.target.value })}
-                    placeholder="Bonsai Artisans Co."
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="issue_date">Issue Date</Label>
-                  <Input
-                    id="issue_date"
-                    type="date"
-                    value={mintForm.issue_date}
-                    onChange={(e) => setMintForm({ ...mintForm, issue_date: e.target.value })}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Provenance Information */}
-            <div className="space-y-4">
-              <h3 className="font-semibold text-sm">Provenance Information</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="provenance_id">Provenance ID</Label>
-                  <Input
-                    id="provenance_id"
-                    value={mintForm.provenance_id}
-                    onChange={(e) => setMintForm({ ...mintForm, provenance_id: e.target.value })}
-                    placeholder="Auto-generated if empty"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="provenanceProductName">Product Name</Label>
-                  <Input
-                    id="provenanceProductName"
-                    value={mintForm.provenanceProductName}
-                    onChange={(e) => setMintForm({ ...mintForm, provenanceProductName: e.target.value })}
-                    placeholder="Uses Product field if empty"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="provenanceBatchNumber">Batch Number</Label>
-                  <Input
-                    id="provenanceBatchNumber"
-                    value={mintForm.provenanceBatchNumber}
-                    onChange={(e) => setMintForm({ ...mintForm, provenanceBatchNumber: e.target.value })}
-                    placeholder="BATCH-001"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="provenancePhysicalHash">Physical Hash</Label>
-                  <Input
-                    id="provenancePhysicalHash"
-                    value={mintForm.provenancePhysicalHash}
-                    onChange={(e) => setMintForm({ ...mintForm, provenancePhysicalHash: e.target.value })}
-                    placeholder="Optional physical verification hash"
-                  />
-                </div>
-              </div>
-
-              {/* Custom Attributes */}
-              <div className="space-y-2">
-                <Label>Custom Attributes</Label>
-                {mintForm.provenanceAttributes.map((attr, index) => (
-                  <div key={index} className="flex gap-2">
+          <ScrollArea className="max-h-[60vh] pr-4">
+            <div className="space-y-6 py-4">
+              {/* Basic Information */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Basic Information</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">NFT Name *</Label>
                     <Input
-                      placeholder="Trait Type"
-                      value={attr.trait_type}
-                      onChange={(e) => updateAttribute(index, 'trait_type', e.target.value, 'single')}
+                      id="name"
+                      value={mintForm.name}
+                      onChange={(e) => setMintForm({ ...mintForm, name: e.target.value })}
+                      placeholder="e.g., Bonsai NFT #1"
                     />
-                    <Input
-                      placeholder="Value"
-                      value={attr.value}
-                      onChange={(e) => updateAttribute(index, 'value', e.target.value, 'single')}
-                    />
-                    <Button
-                      size="icon"
-                      variant="outline"
-                      onClick={() => removeAttribute(index, 'single')}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
                   </div>
-                ))}
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => addAttribute('single')}
-                  className="w-full"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Attribute
-                </Button>
+                  <div className="space-y-2">
+                    <Label htmlFor="collection">Collection *</Label>
+                    <Input
+                      id="collection"
+                      value={mintForm.collection}
+                      onChange={(e) => setMintForm({ ...mintForm, collection: e.target.value })}
+                      placeholder="e.g., Spring Collection"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="product">Product *</Label>
+                    <Input
+                      id="product"
+                      value={mintForm.product}
+                      onChange={(e) => setMintForm({ ...mintForm, product: e.target.value })}
+                      placeholder="e.g., Premium Bonsai Kit"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="discountCode">Discount Code *</Label>
+                    <Input
+                      id="discountCode"
+                      value={mintForm.discountCode}
+                      onChange={(e) => setMintForm({ ...mintForm, discountCode: e.target.value })}
+                      placeholder="e.g., BONSAI001"
+                    />
+                  </div>
+                </div>
               </div>
-            </div>
 
-            {/* Artwork Selection */}
-            <div className="space-y-4">
-              <h3 className="font-semibold text-sm">Artwork Selection *</h3>
-              
-              {/* Available Artwork */}
-              <div>
-                <Label className="mb-2 block">Available Artwork</Label>
-                <div className="grid grid-cols-3 gap-3">
-                  {availableArtwork.map((art) => (
+              {/* Artwork Selection */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Artwork Selection *</h3>
+                <div className="grid grid-cols-3 gap-4">
+                  {availableArtwork.map((artwork) => (
                     <div
-                      key={art.url}
-                      onClick={() => toggleArtworkSelection(art.url, 'single')}
-                      className={`cursor-pointer rounded-lg border-2 p-2 transition-all ${
-                        mintForm.selectedArtwork.some(a => a.getDirectURL() === art.url)
-                          ? 'border-primary bg-primary/10'
-                          : 'border-muted hover:border-primary/50'
+                      key={artwork.url}
+                      onClick={() => toggleArtworkSelection(artwork.url, 'single')}
+                      className={`cursor-pointer rounded-lg border-2 overflow-hidden transition-all ${
+                        mintForm.selectedArtwork.some(asset => asset.getDirectURL() === artwork.url)
+                          ? 'border-primary shadow-lg shadow-primary/20'
+                          : 'border-border hover:border-primary/50'
                       }`}
                     >
-                      <img src={art.url} alt={art.name} className="w-full h-24 object-cover rounded mb-2" />
-                      <p className="text-xs text-center">{art.name}</p>
+                      <img src={artwork.url} alt={artwork.name} className="w-full aspect-square object-cover" />
+                      <div className="p-2 bg-muted/50 text-center">
+                        <p className="text-xs font-medium">{artwork.name}</p>
+                      </div>
                     </div>
                   ))}
                 </div>
-              </div>
 
-              {/* Custom Upload */}
-              <div>
-                <Label className="mb-2 block">Upload Custom Artwork</Label>
-                <div className="space-y-3">
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/png,image/jpeg,image/jpg,image/gif"
-                    onChange={(e) => handleFileSelect(e, 'single')}
-                    className="hidden"
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="w-full border-primary/50 hover:border-primary hover:bg-primary/10"
-                  >
-                    <Upload className="h-4 w-4 mr-2" />
-                    Select File
-                  </Button>
-
+                {/* File Upload */}
+                <div className="space-y-2">
+                  <Label>Or Upload Custom Artwork</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleFileSelect(e, 'single')}
+                      className="flex-1"
+                    />
+                    {uploadedFile && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={() => removeUploadedFile('single')}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
                   {uploadedFilePreview && (
-                    <div className="relative border-2 border-primary/20 rounded-lg p-3">
-                      <img src={uploadedFilePreview} alt="Preview" className="w-full h-32 object-cover rounded mb-2" />
-                      <div className="flex gap-2">
+                    <div className="space-y-2">
+                      <img
+                        src={uploadedFilePreview}
+                        alt="Preview"
+                        className="w-32 h-32 object-cover rounded-lg border-2 border-border"
+                      />
+                      {isUploading && (
+                        <div className="space-y-1">
+                          <Progress value={uploadProgress} className="h-2" />
+                          <p className="text-xs text-muted-foreground">Uploading: {uploadProgress}%</p>
+                        </div>
+                      )}
+                      {!isUploading && uploadProgress === 0 && (
                         <Button
+                          type="button"
                           size="sm"
                           onClick={() => handleUploadAndAttach('single')}
-                          disabled={isUploading}
-                          className="flex-1"
                         >
-                          {isUploading ? (
-                            <>
-                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                              Uploading...
-                            </>
-                          ) : (
-                            <>
-                              <CheckCircle className="h-4 w-4 mr-2" />
-                              Attach to NFT
-                            </>
-                          )}
+                          <Upload className="h-3 w-3 mr-1" />
+                          Attach to NFT
                         </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => removeUploadedFile('single')}
-                          disabled={isUploading}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      {isUploading && (
-                        <Progress value={uploadProgress} className="mt-2" />
                       )}
                     </div>
                   )}
                 </div>
               </div>
 
-              {mintForm.selectedArtwork.length > 0 && (
-                <div className="bg-primary/5 p-3 rounded-lg">
-                  <p className="text-sm font-medium mb-2">Selected: {mintForm.selectedArtwork.length} artwork(s)</p>
+              {/* Provenance Information */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Provenance Information</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="provenanceProductName">Product Name</Label>
+                    <Input
+                      id="provenanceProductName"
+                      value={mintForm.provenanceProductName}
+                      onChange={(e) => setMintForm({ ...mintForm, provenanceProductName: e.target.value })}
+                      placeholder="e.g., Premium Bonsai Kit"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="provenanceBatchNumber">Batch Number</Label>
+                    <Input
+                      id="provenanceBatchNumber"
+                      value={mintForm.provenanceBatchNumber}
+                      onChange={(e) => setMintForm({ ...mintForm, provenanceBatchNumber: e.target.value })}
+                      placeholder="e.g., BATCH-001"
+                    />
+                  </div>
+                  <div className="space-y-2 col-span-2">
+                    <Label htmlFor="provenancePhysicalHash">Physical Hash</Label>
+                    <Input
+                      id="provenancePhysicalHash"
+                      value={mintForm.provenancePhysicalHash}
+                      onChange={(e) => setMintForm({ ...mintForm, provenancePhysicalHash: e.target.value })}
+                      placeholder="e.g., SHA256 hash of physical item"
+                    />
+                  </div>
                 </div>
-              )}
-            </div>
 
-            {/* Flags */}
-            <div className="flex gap-4">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={mintForm.verified}
-                  onChange={(e) => setMintForm({ ...mintForm, verified: e.target.checked })}
-                  className="rounded"
-                />
-                <span className="text-sm">Verified</span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={mintForm.mystery}
-                  onChange={(e) => setMintForm({ ...mintForm, mystery: e.target.checked })}
-                  className="rounded"
-                />
-                <span className="text-sm">Mystery NFT</span>
-              </label>
+                {/* Attributes */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label>Attributes</Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => addAttribute('single')}
+                    >
+                      <Plus className="h-3 w-3 mr-1" />
+                      Add Attribute
+                    </Button>
+                  </div>
+                  {mintForm.provenanceAttributes.map((attr, index) => (
+                    <div key={index} className="flex gap-2">
+                      <Input
+                        placeholder="Trait type"
+                        value={attr.trait_type}
+                        onChange={(e) => updateAttribute(index, 'trait_type', e.target.value, 'single')}
+                      />
+                      <Input
+                        placeholder="Value"
+                        value={attr.value}
+                        onChange={(e) => updateAttribute(index, 'value', e.target.value, 'single')}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={() => removeAttribute(index, 'single')}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Additional Fields */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Additional Details</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="asset_class">Asset Class</Label>
+                    <Input
+                      id="asset_class"
+                      value={mintForm.asset_class}
+                      onChange={(e) => setMintForm({ ...mintForm, asset_class: e.target.value })}
+                      placeholder="e.g., Physical Product"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="certification">Certification</Label>
+                    <Input
+                      id="certification"
+                      value={mintForm.certification}
+                      onChange={(e) => setMintForm({ ...mintForm, certification: e.target.value })}
+                      placeholder="e.g., Certified Authentic"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="manufacturer_details">Manufacturer Details</Label>
+                    <Input
+                      id="manufacturer_details"
+                      value={mintForm.manufacturer_details}
+                      onChange={(e) => setMintForm({ ...mintForm, manufacturer_details: e.target.value })}
+                      placeholder="e.g., Bonsai Artisans Co."
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="issue_date">Issue Date</Label>
+                    <Input
+                      id="issue_date"
+                      type="date"
+                      value={mintForm.issue_date}
+                      onChange={(e) => setMintForm({ ...mintForm, issue_date: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      id="verified"
+                      checked={mintForm.verified}
+                      onCheckedChange={(checked) => setMintForm({ ...mintForm, verified: checked })}
+                    />
+                    <Label htmlFor="verified">Verified</Label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      id="mystery"
+                      checked={mintForm.mystery}
+                      onCheckedChange={(checked) => setMintForm({ ...mintForm, mystery: checked })}
+                    />
+                    <Label htmlFor="mystery">Mystery NFT</Label>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
+          </ScrollArea>
+
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowMintDialog(false)} disabled={isMinting}>
               Cancel
             </Button>
-            <Button onClick={handleMintNFT} disabled={isMinting} className="gap-2">
+            <Button
+              onClick={handleMintNFT}
+              disabled={isMinting || mintForm.selectedArtwork.length === 0}
+              className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
+            >
               {isMinting ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                   Minting...
                 </>
               ) : (
                 <>
-                  <Flame className="h-4 w-4" />
+                  <Flame className="h-4 w-4 mr-2" />
                   Mint NFT
                 </>
               )}
@@ -1178,319 +1131,194 @@ export default function AdminDashboard() {
         </DialogContent>
       </Dialog>
 
-      {/* Batch Mint Dialog */}
+      {/* Batch Mint Dialog - Similar structure to Single Mint */}
       <Dialog open={showBatchMintDialog} onOpenChange={setShowBatchMintDialog}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Batch Mint ORIGYN-Compliant NFTs</DialogTitle>
-            <DialogDescription>Create multiple NFTs with shared provenance data</DialogDescription>
+            <DialogTitle className="flex items-center gap-2">
+              <Flame className="h-5 w-5 text-primary" />
+              Batch Mint NFTs
+            </DialogTitle>
+            <DialogDescription>
+              Create multiple ORIGYN-compliant NFTs with sequential numbering
+            </DialogDescription>
           </DialogHeader>
-          <div className="space-y-6 py-4">
-            {/* Batch Count */}
-            <div className="space-y-2">
-              <Label htmlFor="batchCount">Number of NFTs to Mint</Label>
-              <Input
-                id="batchCount"
-                type="number"
-                min="1"
-                max="100"
-                value={batchCount}
-                onChange={(e) => setBatchCount(parseInt(e.target.value) || 1)}
-              />
-              <p className="text-xs text-muted-foreground">Each NFT will be numbered sequentially</p>
-            </div>
 
-            {/* Basic Information */}
-            <div className="space-y-4">
-              <h3 className="font-semibold text-sm">Basic Information</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="namePrefix">Name Prefix *</Label>
-                  <Input
-                    id="namePrefix"
-                    value={batchForm.namePrefix}
-                    onChange={(e) => setBatchForm({ ...batchForm, namePrefix: e.target.value })}
-                    placeholder="Bonsai NFT"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="batchCollection">Collection *</Label>
-                  <Input
-                    id="batchCollection"
-                    value={batchForm.collection}
-                    onChange={(e) => setBatchForm({ ...batchForm, collection: e.target.value })}
-                    placeholder="Spring Collection"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="batchProduct">Product *</Label>
-                  <Input
-                    id="batchProduct"
-                    value={batchForm.product}
-                    onChange={(e) => setBatchForm({ ...batchForm, product: e.target.value })}
-                    placeholder="Premium Bonsai Kit"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="discountCodePrefix">Discount Code Prefix *</Label>
-                  <Input
-                    id="discountCodePrefix"
-                    value={batchForm.discountCodePrefix}
-                    onChange={(e) => setBatchForm({ ...batchForm, discountCodePrefix: e.target.value })}
-                    placeholder="BONSAI"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* ORIGYN Metadata */}
-            <div className="space-y-4">
-              <h3 className="font-semibold text-sm">ORIGYN Metadata</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="batchAssetClass">Asset Class</Label>
-                  <Input
-                    id="batchAssetClass"
-                    value={batchForm.asset_class}
-                    onChange={(e) => setBatchForm({ ...batchForm, asset_class: e.target.value })}
-                    placeholder="Physical Product"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="batchCertification">Certification</Label>
-                  <Input
-                    id="batchCertification"
-                    value={batchForm.certification}
-                    onChange={(e) => setBatchForm({ ...batchForm, certification: e.target.value })}
-                    placeholder="Certified Authentic"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="batchManufacturer">Manufacturer</Label>
-                  <Input
-                    id="batchManufacturer"
-                    value={batchForm.manufacturer_details}
-                    onChange={(e) => setBatchForm({ ...batchForm, manufacturer_details: e.target.value })}
-                    placeholder="Bonsai Artisans Co."
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="batchIssueDate">Issue Date</Label>
-                  <Input
-                    id="batchIssueDate"
-                    type="date"
-                    value={batchForm.issue_date}
-                    onChange={(e) => setBatchForm({ ...batchForm, issue_date: e.target.value })}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Provenance Information */}
-            <div className="space-y-4">
-              <h3 className="font-semibold text-sm">Provenance Information</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="batchProvenanceId">Provenance ID Prefix</Label>
-                  <Input
-                    id="batchProvenanceId"
-                    value={batchForm.provenance_id}
-                    onChange={(e) => setBatchForm({ ...batchForm, provenance_id: e.target.value })}
-                    placeholder="PROV"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="batchProvenanceProductName">Product Name</Label>
-                  <Input
-                    id="batchProvenanceProductName"
-                    value={batchForm.provenanceProductName}
-                    onChange={(e) => setBatchForm({ ...batchForm, provenanceProductName: e.target.value })}
-                    placeholder="Premium Bonsai Kit"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="batchProvenanceBatchNumber">Batch Number</Label>
-                  <Input
-                    id="batchProvenanceBatchNumber"
-                    value={batchForm.provenanceBatchNumber}
-                    onChange={(e) => setBatchForm({ ...batchForm, provenanceBatchNumber: e.target.value })}
-                    placeholder="BATCH-2025"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="batchProvenancePhysicalHash">Physical Hash</Label>
-                  <Input
-                    id="batchProvenancePhysicalHash"
-                    value={batchForm.provenancePhysicalHash}
-                    onChange={(e) => setBatchForm({ ...batchForm, provenancePhysicalHash: e.target.value })}
-                    placeholder="Optional"
-                  />
-                </div>
-              </div>
-
-              {/* Custom Attributes */}
+          <ScrollArea className="max-h-[60vh] pr-4">
+            <div className="space-y-6 py-4">
+              {/* Batch Count */}
               <div className="space-y-2">
-                <Label>Custom Attributes</Label>
-                {batchForm.provenanceAttributes.map((attr, index) => (
-                  <div key={index} className="flex gap-2">
-                    <Input
-                      placeholder="Trait Type"
-                      value={attr.trait_type}
-                      onChange={(e) => updateAttribute(index, 'trait_type', e.target.value, 'batch')}
-                    />
-                    <Input
-                      placeholder="Value"
-                      value={attr.value}
-                      onChange={(e) => updateAttribute(index, 'value', e.target.value, 'batch')}
-                    />
-                    <Button
-                      size="icon"
-                      variant="outline"
-                      onClick={() => removeAttribute(index, 'batch')}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => addAttribute('batch')}
-                  className="w-full"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Attribute
-                </Button>
+                <Label htmlFor="batchCount">Number of NFTs to Mint</Label>
+                <Input
+                  id="batchCount"
+                  type="number"
+                  min="1"
+                  max="100"
+                  value={batchCount}
+                  onChange={(e) => setBatchCount(parseInt(e.target.value) || 1)}
+                />
+                <p className="text-xs text-muted-foreground">NFTs will be numbered sequentially (e.g., #1, #2, #3...)</p>
               </div>
-            </div>
 
-            {/* Artwork Selection */}
-            <div className="space-y-4">
-              <h3 className="font-semibold text-sm">Artwork Selection * (Shared by all NFTs)</h3>
-              
-              {/* Available Artwork */}
-              <div>
-                <Label className="mb-2 block">Available Artwork</Label>
-                <div className="grid grid-cols-3 gap-3">
-                  {availableArtwork.map((art) => (
+              {/* Basic Information */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Basic Information</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="namePrefix">NFT Name Prefix *</Label>
+                    <Input
+                      id="namePrefix"
+                      value={batchForm.namePrefix}
+                      onChange={(e) => setBatchForm({ ...batchForm, namePrefix: e.target.value })}
+                      placeholder="e.g., Bonsai NFT"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="batchCollection">Collection *</Label>
+                    <Input
+                      id="batchCollection"
+                      value={batchForm.collection}
+                      onChange={(e) => setBatchForm({ ...batchForm, collection: e.target.value })}
+                      placeholder="e.g., Spring Collection"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="batchProduct">Product *</Label>
+                    <Input
+                      id="batchProduct"
+                      value={batchForm.product}
+                      onChange={(e) => setBatchForm({ ...batchForm, product: e.target.value })}
+                      placeholder="e.g., Premium Bonsai Kit"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="discountCodePrefix">Discount Code Prefix *</Label>
+                    <Input
+                      id="discountCodePrefix"
+                      value={batchForm.discountCodePrefix}
+                      onChange={(e) => setBatchForm({ ...batchForm, discountCodePrefix: e.target.value })}
+                      placeholder="e.g., BONSAI"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Artwork Selection */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Artwork Selection *</h3>
+                <div className="grid grid-cols-3 gap-4">
+                  {availableArtwork.map((artwork) => (
                     <div
-                      key={art.url}
-                      onClick={() => toggleArtworkSelection(art.url, 'batch')}
-                      className={`cursor-pointer rounded-lg border-2 p-2 transition-all ${
-                        batchForm.selectedArtwork.some(a => a.getDirectURL() === art.url)
-                          ? 'border-primary bg-primary/10'
-                          : 'border-muted hover:border-primary/50'
+                      key={artwork.url}
+                      onClick={() => toggleArtworkSelection(artwork.url, 'batch')}
+                      className={`cursor-pointer rounded-lg border-2 overflow-hidden transition-all ${
+                        batchForm.selectedArtwork.some(asset => asset.getDirectURL() === artwork.url)
+                          ? 'border-primary shadow-lg shadow-primary/20'
+                          : 'border-border hover:border-primary/50'
                       }`}
                     >
-                      <img src={art.url} alt={art.name} className="w-full h-24 object-cover rounded mb-2" />
-                      <p className="text-xs text-center">{art.name}</p>
+                      <img src={artwork.url} alt={artwork.name} className="w-full aspect-square object-cover" />
+                      <div className="p-2 bg-muted/50 text-center">
+                        <p className="text-xs font-medium">{artwork.name}</p>
+                      </div>
                     </div>
                   ))}
                 </div>
-              </div>
 
-              {/* Custom Upload */}
-              <div>
-                <Label className="mb-2 block">Upload Custom Artwork</Label>
-                <div className="space-y-3">
-                  <input
-                    ref={batchFileInputRef}
-                    type="file"
-                    accept="image/png,image/jpeg,image/jpg,image/gif"
-                    onChange={(e) => handleFileSelect(e, 'batch')}
-                    className="hidden"
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => batchFileInputRef.current?.click()}
-                    className="w-full border-primary/50 hover:border-primary hover:bg-primary/10"
-                  >
-                    <Upload className="h-4 w-4 mr-2" />
-                    Select File
-                  </Button>
-
+                {/* File Upload */}
+                <div className="space-y-2">
+                  <Label>Or Upload Custom Artwork</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      ref={batchFileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleFileSelect(e, 'batch')}
+                      className="flex-1"
+                    />
+                    {batchUploadedFile && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={() => removeUploadedFile('batch')}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
                   {batchUploadedFilePreview && (
-                    <div className="relative border-2 border-primary/20 rounded-lg p-3">
-                      <img src={batchUploadedFilePreview} alt="Preview" className="w-full h-32 object-cover rounded mb-2" />
-                      <div className="flex gap-2">
+                    <div className="space-y-2">
+                      <img
+                        src={batchUploadedFilePreview}
+                        alt="Preview"
+                        className="w-32 h-32 object-cover rounded-lg border-2 border-border"
+                      />
+                      {isBatchUploading && (
+                        <div className="space-y-1">
+                          <Progress value={batchUploadProgress} className="h-2" />
+                          <p className="text-xs text-muted-foreground">Uploading: {batchUploadProgress}%</p>
+                        </div>
+                      )}
+                      {!isBatchUploading && batchUploadProgress === 0 && (
                         <Button
+                          type="button"
                           size="sm"
                           onClick={() => handleUploadAndAttach('batch')}
-                          disabled={isBatchUploading}
-                          className="flex-1"
                         >
-                          {isBatchUploading ? (
-                            <>
-                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                              Uploading...
-                            </>
-                          ) : (
-                            <>
-                              <CheckCircle className="h-4 w-4 mr-2" />
-                              Attach to NFTs
-                            </>
-                          )}
+                          <Upload className="h-3 w-3 mr-1" />
+                          Attach to NFTs
                         </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => removeUploadedFile('batch')}
-                          disabled={isBatchUploading}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      {isBatchUploading && (
-                        <Progress value={batchUploadProgress} className="mt-2" />
                       )}
                     </div>
                   )}
                 </div>
               </div>
 
-              {batchForm.selectedArtwork.length > 0 && (
-                <div className="bg-primary/5 p-3 rounded-lg">
-                  <p className="text-sm font-medium mb-2">Selected: {batchForm.selectedArtwork.length} artwork(s)</p>
+              {/* Provenance Information */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Provenance Information</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="batchProvenanceProductName">Product Name</Label>
+                    <Input
+                      id="batchProvenanceProductName"
+                      value={batchForm.provenanceProductName}
+                      onChange={(e) => setBatchForm({ ...batchForm, provenanceProductName: e.target.value })}
+                      placeholder="e.g., Premium Bonsai Kit"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="batchProvenanceBatchNumber">Batch Number</Label>
+                    <Input
+                      id="batchProvenanceBatchNumber"
+                      value={batchForm.provenanceBatchNumber}
+                      onChange={(e) => setBatchForm({ ...batchForm, provenanceBatchNumber: e.target.value })}
+                      placeholder="e.g., BATCH-2025"
+                    />
+                  </div>
                 </div>
-              )}
+              </div>
             </div>
+          </ScrollArea>
 
-            {/* Flags */}
-            <div className="flex gap-4">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={batchForm.verified}
-                  onChange={(e) => setBatchForm({ ...batchForm, verified: e.target.checked })}
-                  className="rounded"
-                />
-                <span className="text-sm">Verified</span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={batchForm.mystery}
-                  onChange={(e) => setBatchForm({ ...batchForm, mystery: e.target.checked })}
-                  className="rounded"
-                />
-                <span className="text-sm">Mystery NFTs</span>
-              </label>
-            </div>
-          </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowBatchMintDialog(false)} disabled={isBatchMinting}>
               Cancel
             </Button>
-            <Button onClick={handleBatchMint} disabled={isBatchMinting} className="gap-2">
+            <Button
+              onClick={handleBatchMint}
+              disabled={isBatchMinting || batchForm.selectedArtwork.length === 0}
+              className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
+            >
               {isBatchMinting ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                   Minting {batchCount} NFTs...
                 </>
               ) : (
                 <>
-                  <Flame className="h-4 w-4" />
+                  <Flame className="h-4 w-4 mr-2" />
                   Mint {batchCount} NFTs
                 </>
               )}
@@ -1503,19 +1331,19 @@ export default function AdminDashboard() {
       <Dialog open={showTransferDialog} onOpenChange={setShowTransferDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Transfer NFT</DialogTitle>
-            <DialogDescription>Transfer this NFT to another user's Principal ID</DialogDescription>
+            <DialogTitle className="flex items-center gap-2">
+              <Send className="h-5 w-5 text-primary" />
+              Transfer NFT
+            </DialogTitle>
+            <DialogDescription>
+              Transfer this NFT to another user's principal ID
+            </DialogDescription>
           </DialogHeader>
           {selectedNFT && (
             <div className="space-y-4 py-4">
-              <div className="bg-muted p-3 rounded-lg">
-                <p className="font-semibold">{selectedNFT.name}</p>
-                <p className="text-sm text-muted-foreground">{selectedNFT.collection}</p>
-                {selectedNFT.provenance_id && (
-                  <p className="text-xs text-muted-foreground font-mono mt-1">
-                    Provenance: {selectedNFT.provenance_id}
-                  </p>
-                )}
+              <div>
+                <h3 className="font-semibold text-foreground">{selectedNFT.name}</h3>
+                <p className="text-sm text-muted-foreground">Token ID: {selectedNFT.id.toString()}</p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="transferTo">Recipient Principal ID</Label>
@@ -1523,20 +1351,21 @@ export default function AdminDashboard() {
                   id="transferTo"
                   value={transferTo}
                   onChange={(e) => setTransferTo(e.target.value)}
-                  placeholder="Enter recipient's Principal ID"
+                  placeholder="Enter principal ID"
                 />
-                <p className="text-xs text-muted-foreground">
-                  The recipient can find their Principal ID in their wallet view on the User Dashboard.
-                </p>
               </div>
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowTransferDialog(false)}>
+            <Button variant="outline" onClick={() => setShowTransferDialog(false)} disabled={isTransferring}>
               Cancel
             </Button>
-            <Button onClick={handleTransfer} disabled={isTransferring || !transferTo}>
-              {isTransferring ? 'Transferring...' : 'Transfer'}
+            <Button
+              onClick={handleTransfer}
+              disabled={isTransferring || !transferTo}
+              className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
+            >
+              {isTransferring ? 'Transferring...' : 'Transfer NFT'}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1544,168 +1373,59 @@ export default function AdminDashboard() {
 
       {/* Redemption Details Dialog */}
       <Dialog open={showRedemptionDetails} onOpenChange={setShowRedemptionDetails}>
-        <DialogContent className="max-w-3xl border-primary/20">
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Package className="h-5 w-5 text-primary" />
-              Archived NFT - Complete Provenance
+              <CheckCircle className="h-5 w-5 text-accent" />
+              Redemption Details
             </DialogTitle>
-            <DialogDescription>
-              Full metadata and media assets preserved from burned NFT
-            </DialogDescription>
           </DialogHeader>
           {selectedRedemption && (
-            <ScrollArea className="max-h-[70vh] pr-4">
-              <div className="space-y-6 py-4">
-                {/* Media Assets Gallery */}
-                {selectedRedemption.metadata.media_assets.length > 0 && (
-                  <div className="space-y-3">
-                    <h4 className="font-semibold text-sm">Media Assets</h4>
-                    <div className="grid grid-cols-2 gap-3">
-                      {selectedRedemption.metadata.media_assets.map((asset, index) => (
-                        <div key={index} className="relative rounded-lg overflow-hidden border-2 border-primary/20">
-                          <img
-                            src={getMediaAssetDisplayUrl(asset)}
-                            alt={`${selectedRedemption.metadata.name} - Asset ${index + 1}`}
-                            className="w-full h-48 object-cover"
-                          />
-                          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
-                            <p className="text-white text-xs">Asset {index + 1}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* NFT Information */}
-                <div className="bg-primary/10 p-4 rounded-lg space-y-2 border border-primary/20">
-                  <h4 className="font-semibold text-lg">{selectedRedemption.metadata.name}</h4>
-                  <p className="text-sm text-muted-foreground">{selectedRedemption.metadata.collection}</p>
-                  <div className="flex items-center gap-2 pt-2">
-                    {selectedRedemption.metadata.verified && (
-                      <Badge variant="default" className="gap-1">
-                        <CheckCircle className="h-3 w-3" />
-                        Verified
-                      </Badge>
-                    )}
-                    {selectedRedemption.metadata.certification && (
-                      <Badge variant="outline" className="gap-1">
-                        <Shield className="h-3 w-3" />
-                        {selectedRedemption.metadata.certification}
-                      </Badge>
-                    )}
-                    <Badge variant="secondary" className="font-mono">
-                      {selectedRedemption.metadata.discountCode}
-                    </Badge>
-                  </div>
+            <div className="space-y-4 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-muted-foreground">NFT Name</Label>
+                  <p className="font-semibold">{selectedRedemption.metadata.name}</p>
                 </div>
-
-                {/* Provenance Details */}
-                <div className="space-y-3">
-                  <h4 className="font-semibold">Provenance Information</h4>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-1">Provenance ID</p>
-                      <p className="font-mono text-sm">{selectedRedemption.metadata.provenance.id}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-1">Product Name</p>
-                      <p className="text-sm font-medium">{selectedRedemption.metadata.provenance.productName}</p>
-                    </div>
-                  </div>
-
-                  {selectedRedemption.metadata.provenance.batchNumber && (
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-1">Batch Number</p>
-                      <p className="font-mono text-sm">{selectedRedemption.metadata.provenance.batchNumber}</p>
-                    </div>
-                  )}
-
-                  {selectedRedemption.metadata.provenance.creationDate && (
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-1">Creation Date</p>
-                      <p className="text-sm">
-                        {new Date(Number(selectedRedemption.metadata.provenance.creationDate) / 1000000).toLocaleString()}
-                      </p>
-                    </div>
-                  )}
-
-                  {selectedRedemption.metadata.provenance.physicalHash && (
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
-                        <Hash className="h-3 w-3" />
-                        Physical Hash
-                      </p>
-                      <p className="font-mono text-xs break-all bg-muted p-2 rounded border border-primary/20">
-                        {selectedRedemption.metadata.provenance.physicalHash}
-                      </p>
-                    </div>
-                  )}
-
-                  {selectedRedemption.metadata.provenance.attributes && selectedRedemption.metadata.provenance.attributes.length > 0 && (
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-2">Custom Attributes</p>
-                      <div className="space-y-2">
-                        {selectedRedemption.metadata.provenance.attributes.map((attr, index) => (
-                          <div key={index} className="flex items-center justify-between bg-muted p-2 rounded border border-primary/20">
-                            <span className="text-sm text-muted-foreground">{attr.trait_type}</span>
-                            <Badge variant="secondary">{attr.value}</Badge>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                <div>
+                  <Label className="text-muted-foreground">Token ID</Label>
+                  <p className="font-mono">{selectedRedemption.nftId.toString()}</p>
                 </div>
-
-                {/* Additional Metadata */}
-                <div className="space-y-2 border-t pt-4">
-                  <p className="text-xs text-muted-foreground mb-1">Additional Metadata</p>
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    {selectedRedemption.metadata.asset_class && (
-                      <div>
-                        <span className="text-muted-foreground">Asset Class: </span>
-                        <span className="font-medium">{selectedRedemption.metadata.asset_class}</span>
-                      </div>
-                    )}
-                    {selectedRedemption.metadata.manufacturer_details && (
-                      <div className="col-span-2">
-                        <span className="text-muted-foreground">Manufacturer: </span>
-                        <span className="font-medium">{selectedRedemption.metadata.manufacturer_details}</span>
-                      </div>
-                    )}
-                    {selectedRedemption.metadata.issue_date && (
-                      <div>
-                        <span className="text-muted-foreground">Issue Date: </span>
-                        <span className="font-medium">{selectedRedemption.metadata.issue_date}</span>
-                      </div>
-                    )}
-                  </div>
+                <div>
+                  <Label className="text-muted-foreground">Collection</Label>
+                  <p>{selectedRedemption.metadata.collection}</p>
                 </div>
-
-                {/* Redemption Info */}
-                <div className="bg-muted/50 p-3 rounded-lg border border-primary/20">
-                  <p className="text-xs text-muted-foreground mb-2">Redemption Information</p>
-                  <div className="space-y-1 text-sm">
-                    <div>
-                      <span className="text-muted-foreground">User: </span>
-                      <span className="font-mono">{selectedRedemption.user.toString()}</span>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">Redeemed: </span>
-                      <span>{new Date(Number(selectedRedemption.timestamp) / 1000000).toLocaleString()}</span>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">NFT ID: </span>
-                      <span className="font-mono">#{selectedRedemption.nftId.toString()}</span>
-                    </div>
-                  </div>
+                <div>
+                  <Label className="text-muted-foreground">Product</Label>
+                  <p>{selectedRedemption.metadata.product}</p>
+                </div>
+                <div className="col-span-2">
+                  <Label className="text-muted-foreground">User Principal</Label>
+                  <p className="font-mono text-xs break-all">{selectedRedemption.user.toString()}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Redemption Date</Label>
+                  <p>{new Date(Number(selectedRedemption.timestamp) / 1000000).toLocaleString()}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Discount Code</Label>
+                  <code className="font-bold text-primary">{selectedRedemption.metadata.discountCode}</code>
                 </div>
               </div>
-            </ScrollArea>
+              {selectedRedemption.metadata.media_assets && selectedRedemption.metadata.media_assets.length > 0 && (
+                <div>
+                  <Label className="text-muted-foreground">NFT Image</Label>
+                  <img
+                    src={getMediaAssetDisplayUrl(selectedRedemption.metadata.media_assets[0])}
+                    alt={selectedRedemption.metadata.name}
+                    className="w-full max-w-md rounded-lg border-2 border-border mt-2"
+                  />
+                </div>
+              )}
+            </div>
           )}
           <DialogFooter>
-            <Button onClick={() => setShowRedemptionDetails(false)} className="ember-glow">Close</Button>
+            <Button onClick={() => setShowRedemptionDetails(false)}>Close</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

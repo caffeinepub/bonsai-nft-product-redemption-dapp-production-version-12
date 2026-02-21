@@ -6,12 +6,14 @@
   "components": {
     "authorization": "1.0.1",
     "blob-storage": "2.0.3",
-    "core-infrastructure": "1.0.0",
+    "core-infrastructure": "1.0.2",
     "shadcn-ui": "1.0.0",
     "build-template-react": "1.0.0",
-    "initial-app": "1.0.0"
+    "initial-app": "1.0.0",
+    "github-export-icp-cli": "1.0.0"
   },
-  "aiCoreVersion": "0.17.0",
+  "aiCoreVersion": "0.20.2",
   "motokoVersion": "0.16.3-caffeine-4",
-  "failedMigrationVersion": "0.11.5"
+  "failedMigrationVersion": "0.11.5",
+  "tags": []
 }

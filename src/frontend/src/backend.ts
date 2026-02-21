@@ -89,10 +89,6 @@ export class ExternalBlob {
         return this;
     }
 }
-export interface _CaffeineStorageRefillResult {
-    success?: boolean;
-    topped_up_amount?: bigint;
-}
 export interface ProvenanceID {
     id: string;
     productName: string;
@@ -103,6 +99,14 @@ export interface ProvenanceID {
         value: string;
     }>;
     batchNumber: string;
+}
+export type Time = bigint;
+export interface _CaffeineStorageRefillInformation {
+    proposed_top_up_amount?: bigint;
+}
+export interface _CaffeineStorageCreateCertificateResult {
+    method: string;
+    blob_hash: string;
 }
 export interface ORIGYNMetadata {
     id: bigint;
@@ -121,31 +125,11 @@ export interface ORIGYNMetadata {
     media_assets: Array<ExternalBlob>;
     product: string;
 }
-export type Time = bigint;
-export interface _CaffeineStorageRefillInformation {
-    proposed_top_up_amount?: bigint;
-}
-export interface AddressBookEntry {
-    principal: Principal;
-    nickname: string;
-    createdAt: Time;
-    updatedAt: Time;
-}
-export interface _CaffeineStorageCreateCertificateResult {
-    method: string;
-    blob_hash: string;
-}
 export interface RedemptionRecord {
     metadata: ORIGYNMetadata;
     user: Principal;
     nftId: bigint;
     timestamp: Time;
-}
-export interface UserProfile {
-    bio: string;
-    displayName: string;
-    profileImage?: ExternalBlob;
-    forgeTheme: string;
 }
 export interface TransactionRecord {
     to?: Principal;
@@ -155,6 +139,42 @@ export interface TransactionRecord {
     user: Principal;
     nftId: bigint;
     timestamp: Time;
+}
+export interface AddressBookEntry {
+    principal: Principal;
+    nickname: string;
+    createdAt: Time;
+    updatedAt: Time;
+}
+export interface NFTData {
+    id: bigint;
+    provenance: ProvenanceID;
+    verified: boolean;
+    manufacturer_details: string;
+    provenance_id: string;
+    collection: string;
+    owner: Principal;
+    creationTimestamp: Time;
+    discountCode: string;
+    redeemed: boolean;
+    name: string;
+    origyn_metadata: ORIGYNMetadata;
+    certification: string;
+    mystery: boolean;
+    asset_class: string;
+    issue_date: string;
+    media_assets: Array<ExternalBlob>;
+    product: string;
+}
+export interface _CaffeineStorageRefillResult {
+    success?: boolean;
+    topped_up_amount?: bigint;
+}
+export interface UserProfile {
+    bio: string;
+    displayName: string;
+    profileImage?: ExternalBlob;
+    forgeTheme: string;
 }
 export enum TransactionType {
     burn = "burn",
@@ -188,6 +208,7 @@ export interface backendInterface {
     getOwnedNFTs(): Promise<Array<ORIGYNMetadata>>;
     getRedemptionHistory(): Promise<Array<RedemptionRecord>>;
     getTransactionHistory(): Promise<Array<TransactionRecord>>;
+    getUserNFTs(): Promise<Array<NFTData>>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     initializeAccessControl(): Promise<void>;
     isCallerAdmin(): Promise<boolean>;
@@ -198,7 +219,7 @@ export interface backendInterface {
     transferNFT(nftId: bigint, to: Principal): Promise<void>;
     updateAddressBookEntry(principal: Principal, newNickname: string): Promise<void>;
 }
-import type { ExternalBlob as _ExternalBlob, ORIGYNMetadata as _ORIGYNMetadata, ProvenanceID as _ProvenanceID, RedemptionRecord as _RedemptionRecord, Time as _Time, TransactionRecord as _TransactionRecord, TransactionType as _TransactionType, UserProfile as _UserProfile, UserRole as _UserRole, _CaffeineStorageRefillInformation as __CaffeineStorageRefillInformation, _CaffeineStorageRefillResult as __CaffeineStorageRefillResult } from "./declarations/backend.did.d.ts";
+import type { ExternalBlob as _ExternalBlob, NFTData as _NFTData, ORIGYNMetadata as _ORIGYNMetadata, ProvenanceID as _ProvenanceID, RedemptionRecord as _RedemptionRecord, Time as _Time, TransactionRecord as _TransactionRecord, TransactionType as _TransactionType, UserProfile as _UserProfile, UserRole as _UserRole, _CaffeineStorageRefillInformation as __CaffeineStorageRefillInformation, _CaffeineStorageRefillResult as __CaffeineStorageRefillResult } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
     constructor(private actor: ActorSubclass<_SERVICE>, private _uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, private _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, private processError?: (error: unknown) => never){}
     async _caffeineStorageBlobIsLive(arg0: Uint8Array): Promise<boolean> {
@@ -495,6 +516,20 @@ export class Backend implements backendInterface {
             return from_candid_vec_n21(this._uploadFile, this._downloadFile, result);
         }
     }
+    async getUserNFTs(): Promise<Array<NFTData>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getUserNFTs();
+                return from_candid_vec_n36(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getUserNFTs();
+            return from_candid_vec_n36(this._uploadFile, this._downloadFile, result);
+        }
+    }
     async getUserProfile(arg0: Principal): Promise<UserProfile | null> {
         if (this.processError) {
             try {
@@ -568,14 +603,14 @@ export class Backend implements backendInterface {
     async saveCallerUserProfile(arg0: UserProfile): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.saveCallerUserProfile(await to_candid_UserProfile_n36(this._uploadFile, this._downloadFile, arg0));
+                const result = await this.actor.saveCallerUserProfile(await to_candid_UserProfile_n39(this._uploadFile, this._downloadFile, arg0));
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.saveCallerUserProfile(await to_candid_UserProfile_n36(this._uploadFile, this._downloadFile, arg0));
+            const result = await this.actor.saveCallerUserProfile(await to_candid_UserProfile_n39(this._uploadFile, this._downloadFile, arg0));
             return result;
         }
     }
@@ -624,6 +659,9 @@ export class Backend implements backendInterface {
 }
 async function from_candid_ExternalBlob_n20(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _ExternalBlob): Promise<ExternalBlob> {
     return await _downloadFile(value);
+}
+async function from_candid_NFTData_n37(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _NFTData): Promise<NFTData> {
+    return await from_candid_record_n38(_uploadFile, _downloadFile, value);
 }
 async function from_candid_ORIGYNMetadata_n17(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _ORIGYNMetadata): Promise<ORIGYNMetadata> {
     return await from_candid_record_n18(_uploadFile, _downloadFile, value);
@@ -775,6 +813,66 @@ async function from_candid_record_n35(_uploadFile: (file: ExternalBlob) => Promi
         timestamp: value.timestamp
     };
 }
+async function from_candid_record_n38(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    id: bigint;
+    provenance: _ProvenanceID;
+    verified: boolean;
+    manufacturer_details: string;
+    provenance_id: string;
+    collection: string;
+    owner: Principal;
+    creationTimestamp: _Time;
+    discountCode: string;
+    redeemed: boolean;
+    name: string;
+    origyn_metadata: _ORIGYNMetadata;
+    certification: string;
+    mystery: boolean;
+    asset_class: string;
+    issue_date: string;
+    media_assets: Array<_ExternalBlob>;
+    product: string;
+}): Promise<{
+    id: bigint;
+    provenance: ProvenanceID;
+    verified: boolean;
+    manufacturer_details: string;
+    provenance_id: string;
+    collection: string;
+    owner: Principal;
+    creationTimestamp: Time;
+    discountCode: string;
+    redeemed: boolean;
+    name: string;
+    origyn_metadata: ORIGYNMetadata;
+    certification: string;
+    mystery: boolean;
+    asset_class: string;
+    issue_date: string;
+    media_assets: Array<ExternalBlob>;
+    product: string;
+}> {
+    return {
+        id: value.id,
+        provenance: value.provenance,
+        verified: value.verified,
+        manufacturer_details: value.manufacturer_details,
+        provenance_id: value.provenance_id,
+        collection: value.collection,
+        owner: value.owner,
+        creationTimestamp: value.creationTimestamp,
+        discountCode: value.discountCode,
+        redeemed: value.redeemed,
+        name: value.name,
+        origyn_metadata: await from_candid_ORIGYNMetadata_n17(_uploadFile, _downloadFile, value.origyn_metadata),
+        certification: value.certification,
+        mystery: value.mystery,
+        asset_class: value.asset_class,
+        issue_date: value.issue_date,
+        media_assets: await from_candid_vec_n19(_uploadFile, _downloadFile, value.media_assets),
+        product: value.product
+    };
+}
 function from_candid_record_n5(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     success: [] | [boolean];
     topped_up_amount: [] | [bigint];
@@ -817,14 +915,17 @@ async function from_candid_vec_n21(_uploadFile: (file: ExternalBlob) => Promise<
 async function from_candid_vec_n33(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_RedemptionRecord>): Promise<Array<RedemptionRecord>> {
     return await Promise.all(value.map(async (x)=>await from_candid_RedemptionRecord_n34(_uploadFile, _downloadFile, x)));
 }
+async function from_candid_vec_n36(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_NFTData>): Promise<Array<NFTData>> {
+    return await Promise.all(value.map(async (x)=>await from_candid_NFTData_n37(_uploadFile, _downloadFile, x)));
+}
 async function to_candid_ExternalBlob_n14(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: ExternalBlob): Promise<_ExternalBlob> {
     return await _uploadFile(value);
 }
 async function to_candid_ORIGYNMetadata_n11(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: ORIGYNMetadata): Promise<_ORIGYNMetadata> {
     return await to_candid_record_n12(_uploadFile, _downloadFile, value);
 }
-async function to_candid_UserProfile_n36(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserProfile): Promise<_UserProfile> {
-    return await to_candid_record_n37(_uploadFile, _downloadFile, value);
+async function to_candid_UserProfile_n39(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserProfile): Promise<_UserProfile> {
+    return await to_candid_record_n40(_uploadFile, _downloadFile, value);
 }
 function to_candid_UserRole_n8(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserRole): _UserRole {
     return to_candid_variant_n9(_uploadFile, _downloadFile, value);
@@ -895,7 +996,7 @@ function to_candid_record_n3(_uploadFile: (file: ExternalBlob) => Promise<Uint8A
         proposed_top_up_amount: value.proposed_top_up_amount ? candid_some(value.proposed_top_up_amount) : candid_none()
     };
 }
-async function to_candid_record_n37(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+async function to_candid_record_n40(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     bio: string;
     displayName: string;
     profileImage?: ExternalBlob;

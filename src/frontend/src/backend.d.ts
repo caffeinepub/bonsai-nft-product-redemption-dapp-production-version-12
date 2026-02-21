@@ -25,6 +25,7 @@ export interface ProvenanceID {
     }>;
     batchNumber: string;
 }
+export type Time = bigint;
 export interface ORIGYNMetadata {
     id: bigint;
     provenance: ProvenanceID;
@@ -42,24 +43,11 @@ export interface ORIGYNMetadata {
     media_assets: Array<ExternalBlob>;
     product: string;
 }
-export type Time = bigint;
-export interface AddressBookEntry {
-    principal: Principal;
-    nickname: string;
-    createdAt: Time;
-    updatedAt: Time;
-}
 export interface RedemptionRecord {
     metadata: ORIGYNMetadata;
     user: Principal;
     nftId: bigint;
     timestamp: Time;
-}
-export interface UserProfile {
-    bio: string;
-    displayName: string;
-    profileImage?: ExternalBlob;
-    forgeTheme: string;
 }
 export interface TransactionRecord {
     to?: Principal;
@@ -69,6 +57,38 @@ export interface TransactionRecord {
     user: Principal;
     nftId: bigint;
     timestamp: Time;
+}
+export interface AddressBookEntry {
+    principal: Principal;
+    nickname: string;
+    createdAt: Time;
+    updatedAt: Time;
+}
+export interface NFTData {
+    id: bigint;
+    provenance: ProvenanceID;
+    verified: boolean;
+    manufacturer_details: string;
+    provenance_id: string;
+    collection: string;
+    owner: Principal;
+    creationTimestamp: Time;
+    discountCode: string;
+    redeemed: boolean;
+    name: string;
+    origyn_metadata: ORIGYNMetadata;
+    certification: string;
+    mystery: boolean;
+    asset_class: string;
+    issue_date: string;
+    media_assets: Array<ExternalBlob>;
+    product: string;
+}
+export interface UserProfile {
+    bio: string;
+    displayName: string;
+    profileImage?: ExternalBlob;
+    forgeTheme: string;
 }
 export enum TransactionType {
     burn = "burn",
@@ -96,6 +116,7 @@ export interface backendInterface {
     getOwnedNFTs(): Promise<Array<ORIGYNMetadata>>;
     getRedemptionHistory(): Promise<Array<RedemptionRecord>>;
     getTransactionHistory(): Promise<Array<TransactionRecord>>;
+    getUserNFTs(): Promise<Array<NFTData>>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     initializeAccessControl(): Promise<void>;
     isCallerAdmin(): Promise<boolean>;

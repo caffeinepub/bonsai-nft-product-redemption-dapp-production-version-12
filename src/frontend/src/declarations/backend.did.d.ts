@@ -17,6 +17,26 @@ export interface AddressBookEntry {
   'updatedAt' : Time,
 }
 export type ExternalBlob = Uint8Array;
+export interface NFTData {
+  'id' : bigint,
+  'provenance' : ProvenanceID,
+  'verified' : boolean,
+  'manufacturer_details' : string,
+  'provenance_id' : string,
+  'collection' : string,
+  'owner' : Principal,
+  'creationTimestamp' : Time,
+  'discountCode' : string,
+  'redeemed' : boolean,
+  'name' : string,
+  'origyn_metadata' : ORIGYNMetadata,
+  'certification' : string,
+  'mystery' : boolean,
+  'asset_class' : string,
+  'issue_date' : string,
+  'media_assets' : Array<ExternalBlob>,
+  'product' : string,
+}
 export interface ORIGYNMetadata {
   'id' : bigint,
   'provenance' : ProvenanceID,
@@ -115,6 +135,7 @@ export interface _SERVICE {
   'getOwnedNFTs' : ActorMethod<[], Array<ORIGYNMetadata>>,
   'getRedemptionHistory' : ActorMethod<[], Array<RedemptionRecord>>,
   'getTransactionHistory' : ActorMethod<[], Array<TransactionRecord>>,
+  'getUserNFTs' : ActorMethod<[], Array<NFTData>>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'initializeAccessControl' : ActorMethod<[], undefined>,
   'isCallerAdmin' : ActorMethod<[], boolean>,

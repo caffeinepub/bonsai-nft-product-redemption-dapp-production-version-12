@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useActor } from './useActor';
 import { useInternetIdentity } from './useInternetIdentity';
-import type { ORIGYNMetadata, RedemptionRecord, UserProfile, UserRole, TransactionRecord, AddressBookEntry } from '../backend';
+import type { ORIGYNMetadata, RedemptionRecord, UserProfile, UserRole, TransactionRecord, AddressBookEntry, NFTData } from '../backend';
 import { ExternalBlob } from '../backend';
 import { Principal } from '@icp-sdk/core/principal';
 import { toast } from 'sonner';
@@ -192,6 +192,28 @@ export function useGetOwnedNFTs() {
       const nfts = await actor.getOwnedNFTs();
       // Rehydrate media assets for persistent display
       return Promise.all(nfts.map(rehydrateMediaAssets));
+    },
+    enabled: !!actor && !isFetching && !!identity,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+}
+
+export function useUserNFTs() {
+  const { actor, isFetching } = useActor();
+  const { identity } = useInternetIdentity();
+
+  return useQuery<NFTData[]>({
+    queryKey: ['userNFTs', identity?.getPrincipal().toString()],
+    queryFn: async () => {
+      if (!actor) return [];
+      const nfts = await actor.getUserNFTs();
+      // Rehydrate media assets for persistent display
+      return Promise.all(
+        nfts.map(async (nft) => ({
+          ...nft,
+          origyn_metadata: await rehydrateMediaAssets(nft.origyn_metadata),
+        }))
+      );
     },
     enabled: !!actor && !isFetching && !!identity,
     staleTime: 1000 * 60 * 5, // 5 minutes
@@ -399,16 +421,19 @@ export function useMintNFT() {
   return useMutation({
     mutationFn: async ({ metadata, mediaAssets }: { metadata: ORIGYNMetadata; mediaAssets: ExternalBlob[] }) => {
       if (!actor) throw new Error('Actor not available');
-      return actor.mintNFT(metadata, mediaAssets);
+      const tokenId = await actor.mintNFT(metadata, mediaAssets);
+      return tokenId;
     },
-    onSuccess: () => {
+    onSuccess: (tokenId) => {
       queryClient.invalidateQueries({ queryKey: ['allNFTs'] });
       queryClient.invalidateQueries({ queryKey: ['ownedNFTs'] });
+      queryClient.invalidateQueries({ queryKey: ['userNFTs'] });
       queryClient.invalidateQueries({ queryKey: ['transactionHistory'] });
       queryClient.invalidateQueries({ queryKey: ['allTransactionHistory'] });
-      toast.success('NFT minted successfully');
+      toast.success(`NFT minted successfully! Token ID: ${tokenId}`);
     },
     onError: (error: Error) => {
+      console.error('Mint error:', error);
       toast.error(`Failed to mint NFT: ${error.message}`);
     },
   });
@@ -421,16 +446,19 @@ export function useBatchMintNFTs() {
   return useMutation({
     mutationFn: async ({ metadataList, mediaAssetsList }: { metadataList: ORIGYNMetadata[]; mediaAssetsList: ExternalBlob[][] }) => {
       if (!actor) throw new Error('Actor not available');
-      return actor.batchMintNFTs(metadataList, mediaAssetsList);
+      const tokenIds = await actor.batchMintNFTs(metadataList, mediaAssetsList);
+      return tokenIds;
     },
     onSuccess: (ids) => {
       queryClient.invalidateQueries({ queryKey: ['allNFTs'] });
       queryClient.invalidateQueries({ queryKey: ['ownedNFTs'] });
+      queryClient.invalidateQueries({ queryKey: ['userNFTs'] });
       queryClient.invalidateQueries({ queryKey: ['transactionHistory'] });
       queryClient.invalidateQueries({ queryKey: ['allTransactionHistory'] });
-      toast.success(`${ids.length} NFTs minted successfully`);
+      toast.success(`${ids.length} NFTs minted successfully!`);
     },
     onError: (error: Error) => {
+      console.error('Batch mint error:', error);
       toast.error(`Failed to batch mint NFTs: ${error.message}`);
     },
   });
@@ -447,6 +475,7 @@ export function useBurnNFT() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ownedNFTs'] });
+      queryClient.invalidateQueries({ queryKey: ['userNFTs'] });
       queryClient.invalidateQueries({ queryKey: ['redemptionHistory'] });
       queryClient.invalidateQueries({ queryKey: ['leaderboard'] });
       queryClient.invalidateQueries({ queryKey: ['allNFTs'] });
@@ -472,6 +501,7 @@ export function useTransferNFT() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['allNFTs'] });
       queryClient.invalidateQueries({ queryKey: ['ownedNFTs'] });
+      queryClient.invalidateQueries({ queryKey: ['userNFTs'] });
       queryClient.invalidateQueries({ queryKey: ['transactionHistory'] });
       queryClient.invalidateQueries({ queryKey: ['allTransactionHistory'] });
       toast.success('NFT transferred successfully');

@@ -1,0 +1,74 @@
+{
+  "schemaVersion": "1.0.0",
+  "projectStateVersion": 3,
+  "summary": "NFT minting platform with ORIGYN-compliant archival system and forge-themed visuals",
+  "architectural_notes": [
+    "NFT minting process completes successfully with provenance info",
+    "Current issue: NFTs not appearing in user collections after mint",
+    "Requires persistent storage of NFT data and images in canister",
+    "Collection view needs to fetch and display held NFTs with full metadata"
+  ],
+  "known_issues": [
+    "Minted NFTs do not appear in user collection despite successful mint",
+    "NFT images may not be persisting in canister storage",
+    "Collection view not displaying minted NFT data and images"
+  ],
+  "isFixRequest": true,
+  "existing_features": [
+    {
+      "id": "feature-fix-the-user-collection-view-in-userdashboard-to-properly-fetch-and-display-all-minted-nfts-with-their-images-and-full-metadata-information",
+      "title": "Fix the user collection view in UserDashboard to properly fetch and display all minted NFTs with their images and full metadata information",
+      "reqIds": [
+        "REQ-3"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-verify-that-the-mint-flow-in-admindashboard-correctly-uploads-images-to-backend-blob-storage-and-receives-confirmation-of-successful-nft-creation-before-showing-success-message",
+      "title": "Verify that the mint flow in AdminDashboard correctly uploads images to backend blob storage and receives confirmation of successful NFT creation before showing success message",
+      "reqIds": [
+        "REQ-4"
+      ],
+      "version": 1
+    }
+  ],
+  "new_feature_requests": [
+    {
+      "id": "AR-1",
+      "summary": "Fix NFT persistence - minted NFTs must appear in user collection with images and metadata",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-2",
+      "summary": "Ensure NFT images persist in canister storage",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-3",
+      "summary": "Display NFT images and metadata in user collection view",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-4",
+      "summary": "Fix the NFT minting process to ensure minted NFTs are properly stored in the backend canister with complete metadata including token ID, owner Principal, provenance data, ORIGYN metadata, and image blob references",
+      "reqIds": [
+        "REQ-1"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-5",
+      "summary": "Ensure getUserNFTs backend function returns all NFTs owned by the requesting user with complete metadata and image blob references",
+      "reqIds": [
+        "REQ-2"
+      ],
+      "status": "pending"
+    }
+  ],
+  "projectName": "Bonsai NFT",
+  "clarification_mode": "instant",
+  "clarification_rounds": 0
+}

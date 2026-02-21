@@ -85,6 +85,26 @@ export const RedemptionRecord = IDL.Record({
   'nftId' : IDL.Nat,
   'timestamp' : Time,
 });
+export const NFTData = IDL.Record({
+  'id' : IDL.Nat,
+  'provenance' : ProvenanceID,
+  'verified' : IDL.Bool,
+  'manufacturer_details' : IDL.Text,
+  'provenance_id' : IDL.Text,
+  'collection' : IDL.Text,
+  'owner' : IDL.Principal,
+  'creationTimestamp' : Time,
+  'discountCode' : IDL.Text,
+  'redeemed' : IDL.Bool,
+  'name' : IDL.Text,
+  'origyn_metadata' : ORIGYNMetadata,
+  'certification' : IDL.Text,
+  'mystery' : IDL.Bool,
+  'asset_class' : IDL.Text,
+  'issue_date' : IDL.Text,
+  'media_assets' : IDL.Vec(ExternalBlob),
+  'product' : IDL.Text,
+});
 
 export const idlService = IDL.Service({
   '_caffeineStorageBlobIsLive' : IDL.Func(
@@ -144,6 +164,7 @@ export const idlService = IDL.Service({
       [IDL.Vec(TransactionRecord)],
       ['query'],
     ),
+  'getUserNFTs' : IDL.Func([], [IDL.Vec(NFTData)], ['query']),
   'getUserProfile' : IDL.Func(
       [IDL.Principal],
       [IDL.Opt(UserProfile)],
@@ -239,6 +260,26 @@ export const idlFactory = ({ IDL }) => {
     'nftId' : IDL.Nat,
     'timestamp' : Time,
   });
+  const NFTData = IDL.Record({
+    'id' : IDL.Nat,
+    'provenance' : ProvenanceID,
+    'verified' : IDL.Bool,
+    'manufacturer_details' : IDL.Text,
+    'provenance_id' : IDL.Text,
+    'collection' : IDL.Text,
+    'owner' : IDL.Principal,
+    'creationTimestamp' : Time,
+    'discountCode' : IDL.Text,
+    'redeemed' : IDL.Bool,
+    'name' : IDL.Text,
+    'origyn_metadata' : ORIGYNMetadata,
+    'certification' : IDL.Text,
+    'mystery' : IDL.Bool,
+    'asset_class' : IDL.Text,
+    'issue_date' : IDL.Text,
+    'media_assets' : IDL.Vec(ExternalBlob),
+    'product' : IDL.Text,
+  });
   
   return IDL.Service({
     '_caffeineStorageBlobIsLive' : IDL.Func(
@@ -302,6 +343,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(TransactionRecord)],
         ['query'],
       ),
+    'getUserNFTs' : IDL.Func([], [IDL.Vec(NFTData)], ['query']),
     'getUserProfile' : IDL.Func(
         [IDL.Principal],
         [IDL.Opt(UserProfile)],

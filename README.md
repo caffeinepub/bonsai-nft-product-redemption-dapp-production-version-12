@@ -1,2 +1,3 @@
-# bonsai-nft-product-redemption-dapp-production-version-12
-Exported from Caffeine project: Bonsai NFT Product Redemption dApp   Production Version 12
+## 
+
+To run app build and run docker image: `docker build -t app . docker run -it --network host app`
