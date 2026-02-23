@@ -1,101 +1,60 @@
 {
   "kind": "build_request",
-  "title": "Fix NFT minting persistence and collection display",
-  "projectName": "Bonsai NFT",
-  "priority": "high",
+  "title": "Add deep bass cyberpunk Psy chill background music",
+  "projectName": "Bonsai Forge NFT",
+  "priority": "normal",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Fix the NFT minting process to ensure minted NFTs are properly stored in the backend canister with complete metadata including token ID, owner Principal, provenance data, ORIGYN metadata, and image blob references",
-      "target": "backend",
+      "text": "Replace the existing forge ambient sound system with deep bass cyberpunk Psy chill background music that plays continuously when the user enables audio via the music toggle button in the header",
+      "target": "frontend",
       "source": {
         "messageIds": [
           "msg-last"
         ],
         "quotes": [
-          "I need all NFTs to mint for real. I need their images and information to persist in our canister."
+          "Music playing should be deep bass cyberpunk Psy chill"
         ]
       },
       "acceptanceCriteria": [
-        "NFT metadata is stored in backend state immediately after minting",
-        "Image blobs are stored in the canister's blob storage",
-        "Owner Principal is correctly associated with the minted NFT",
-        "Provenance data persists across canister upgrades",
-        "mintNFT function returns the complete NFT record including token ID"
+        "The music has a deep bass character with cyberpunk and Psy chill aesthetic",
+        "Music plays continuously on loop when enabled",
+        "The existing header audio toggle button (XPath: /html[1]/body[1]/div[1]/div[1]/div[1]/header[1]/div[1]/div[1]/div[1]/button[1]) controls the music playback",
+        "Music volume is appropriately balanced for background listening",
+        "Audio stops cleanly when toggled off or component unmounts"
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Ensure getUserNFTs backend function returns all NFTs owned by the requesting user with complete metadata and image blob references",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-last"
-        ],
-        "quotes": [
-          "the NFT does not show in my collection"
-        ]
-      },
-      "acceptanceCriteria": [
-        "getUserNFTs query returns array of all NFTs where owner matches caller Principal",
-        "Each returned NFT includes token ID, metadata, provenance, and image blob ID",
-        "Function works correctly after page refresh or re-authentication",
-        "Empty array is returned for users with no NFTs (not an error)"
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "text": "Fix the user collection view in UserDashboard to properly fetch and display all minted NFTs with their images and full metadata information",
+      "text": "Update the AmbientSound component to generate or play deep bass cyberpunk Psy chill music instead of the current forge ambient sounds (metal clinks, heat hum, noise)",
       "target": "frontend",
       "source": {
         "messageIds": [
           "msg-last"
         ],
         "quotes": [
-          "I need them to be viewable, images AND information, in a user's collection if they are holding that NFT."
+          "Music playing should be deep bass cyberpunk Psy chill"
         ]
       },
       "acceptanceCriteria": [
-        "Collection view fetches NFTs using useUserNFTs query hook",
-        "Each NFT card displays the uploaded image using the blob URL",
-        "NFT metadata is visible including name, description, and provenance details",
-        "Collection updates immediately after successful mint without requiring page refresh",
-        "Images load correctly from canister blob storage",
-        "Loading states and error handling are implemented"
-      ]
-    },
-    {
-      "id": "REQ-4",
-      "text": "Verify that the mint flow in AdminDashboard correctly uploads images to backend blob storage and receives confirmation of successful NFT creation before showing success message",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-last"
-        ],
-        "quotes": [
-          "the mint process succeeds with all of the provenance info filled out, however the NFT does not show in my collection"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Image upload completes and returns blob ID before NFT minting",
-        "Mint function waits for backend confirmation before invalidating queries",
-        "Success message only shows after NFT is confirmed stored in backend",
-        "React Query cache is properly invalidated to trigger collection refetch",
-        "Error handling catches and displays any storage failures"
+        "The component generates synthesized deep bass tones with cyberpunk characteristics",
+        "The music has a Psy chill vibe with atmospheric pads and rhythmic elements",
+        "The existing volume toggle functionality remains intact",
+        "Audio context initialization and cleanup logic is preserved"
       ]
     }
   ],
   "constraints": [
-    "Do not modify frontend/src/hooks/useInternetIdentity.ts or frontend/src/hooks/useActor.ts",
-    "Do not change the ORIGYN metadata structure already implemented",
-    "Maintain existing blob storage architecture using ExternalBlob pattern",
-    "Preserve single-actor architecture in backend/main.mo"
+    "Do not modify the header component structure or button placement",
+    "Preserve the existing audio toggle control mechanism in the Header component",
+    "Maintain Web Audio API usage for sound generation",
+    "Keep the volume control and audio context cleanup patterns"
   ],
   "nonGoals": [
-    "Adding new NFT metadata fields not already in the schema",
-    "Changing the visual design of the collection view",
-    "Implementing batch minting fixes (focus on single mint flow)",
-    "Modifying authentication or access control logic"
+    "Adding external audio file playback or streaming",
+    "Modifying other ambient sound effects in the TrophyRoom component",
+    "Changing the visual design of the audio toggle button",
+    "Adding music visualization or spectrum analyzers"
   ],
   "imageRequirements": {
     "required": [],

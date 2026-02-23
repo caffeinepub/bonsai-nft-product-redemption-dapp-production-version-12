@@ -6,10 +6,16 @@ export default function AmbientSound() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const audioContextRef = useRef<AudioContext | null>(null);
-  const noiseNodeRef = useRef<AudioBufferSourceNode | null>(null);
-  const gainNodeRef = useRef<GainNode | null>(null);
-  const oscillatorRef = useRef<OscillatorNode | null>(null);
-  const intervalRef = useRef<number | null>(null);
+  const masterGainRef = useRef<GainNode | null>(null);
+  
+  // Music layer references
+  const bassOscRef = useRef<OscillatorNode | null>(null);
+  const bassLFORef = useRef<OscillatorNode | null>(null);
+  const pad1OscRef = useRef<OscillatorNode | null>(null);
+  const pad2OscRef = useRef<OscillatorNode | null>(null);
+  const pad3OscRef = useRef<OscillatorNode | null>(null);
+  const pulseOscRef = useRef<OscillatorNode | null>(null);
+  const pulseIntervalRef = useRef<number | null>(null);
 
   useEffect(() => {
     // Initialize Web Audio API
@@ -19,11 +25,11 @@ export default function AmbientSound() {
         const audioContext = new AudioContext();
         audioContextRef.current = audioContext;
 
-        // Create gain node for volume control
-        const gainNode = audioContext.createGain();
-        gainNode.gain.value = 0.12;
-        gainNode.connect(audioContext.destination);
-        gainNodeRef.current = gainNode;
+        // Create master gain node for volume control
+        const masterGain = audioContext.createGain();
+        masterGain.gain.value = 0.25;
+        masterGain.connect(audioContext.destination);
+        masterGainRef.current = masterGain;
 
         setIsInitialized(true);
       } catch (error) {
@@ -37,66 +43,193 @@ export default function AmbientSound() {
       if (audioContextRef.current) {
         audioContextRef.current.close();
       }
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
+      if (pulseIntervalRef.current) {
+        clearInterval(pulseIntervalRef.current);
       }
     };
   }, []);
 
-  const createNoiseBuffer = (audioContext: AudioContext): AudioBuffer => {
-    const bufferSize = audioContext.sampleRate * 2;
-    const buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
-    const output = buffer.getChannelData(0);
+  const createDeepBassLayer = (audioContext: AudioContext, masterGain: GainNode) => {
+    // Deep bass oscillator (40-60Hz range with slow modulation)
+    const bassOsc = audioContext.createOscillator();
+    bassOsc.type = 'sine';
+    bassOsc.frequency.value = 50; // Deep bass fundamental
 
-    for (let i = 0; i < bufferSize; i++) {
-      output[i] = (Math.random() * 2 - 1) * 0.35;
-    }
+    // LFO for bass frequency modulation (cyberpunk wobble)
+    const bassLFO = audioContext.createOscillator();
+    bassLFO.type = 'sine';
+    bassLFO.frequency.value = 0.15; // Slow modulation
 
-    return buffer;
+    const lfoGain = audioContext.createGain();
+    lfoGain.gain.value = 8; // Modulation depth
+
+    bassLFO.connect(lfoGain);
+    lfoGain.connect(bassOsc.frequency);
+
+    // Bass filter for character
+    const bassFilter = audioContext.createBiquadFilter();
+    bassFilter.type = 'lowpass';
+    bassFilter.frequency.value = 120;
+    bassFilter.Q.value = 2;
+
+    const bassGain = audioContext.createGain();
+    bassGain.gain.value = 0.4;
+
+    bassOsc.connect(bassFilter);
+    bassFilter.connect(bassGain);
+    bassGain.connect(masterGain);
+
+    bassOsc.start();
+    bassLFO.start();
+
+    bassOscRef.current = bassOsc;
+    bassLFORef.current = bassLFO;
   };
 
-  const playMetalClink = () => {
-    if (!audioContextRef.current || !gainNodeRef.current) return;
+  const createAtmosphericPads = (audioContext: AudioContext, masterGain: GainNode) => {
+    // Pad 1: Detuned sawtooth for cyberpunk atmosphere
+    const pad1 = audioContext.createOscillator();
+    pad1.type = 'sawtooth';
+    pad1.frequency.value = 110; // A2
+    pad1.detune.value = -5;
 
-    const audioContext = audioContextRef.current;
-    const now = audioContext.currentTime;
+    const pad1Filter = audioContext.createBiquadFilter();
+    pad1Filter.type = 'lowpass';
+    pad1Filter.frequency.value = 800;
+    pad1Filter.Q.value = 1;
 
-    // Create metallic clink sound
-    const osc = audioContext.createOscillator();
-    const clinkGain = audioContext.createGain();
+    const pad1Gain = audioContext.createGain();
+    pad1Gain.gain.value = 0.08;
 
-    osc.type = 'square';
-    osc.frequency.setValueAtTime(800, now);
-    osc.frequency.exponentialRampToValueAtTime(200, now + 0.08);
+    pad1.connect(pad1Filter);
+    pad1Filter.connect(pad1Gain);
+    pad1Gain.connect(masterGain);
 
-    clinkGain.gain.setValueAtTime(0.2, now);
-    clinkGain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+    // Pad 2: Slightly detuned for richness
+    const pad2 = audioContext.createOscillator();
+    pad2.type = 'sawtooth';
+    pad2.frequency.value = 110;
+    pad2.detune.value = 5;
 
-    osc.connect(clinkGain);
-    clinkGain.connect(gainNodeRef.current);
+    const pad2Filter = audioContext.createBiquadFilter();
+    pad2Filter.type = 'lowpass';
+    pad2Filter.frequency.value = 850;
+    pad2Filter.Q.value = 1;
 
-    osc.start(now);
-    osc.stop(now + 0.08);
+    const pad2Gain = audioContext.createGain();
+    pad2Gain.gain.value = 0.08;
+
+    pad2.connect(pad2Filter);
+    pad2Filter.connect(pad2Gain);
+    pad2Gain.connect(masterGain);
+
+    // Pad 3: Higher harmonic for depth
+    const pad3 = audioContext.createOscillator();
+    pad3.type = 'triangle';
+    pad3.frequency.value = 165; // E3 (fifth above)
+    pad3.detune.value = 3;
+
+    const pad3Filter = audioContext.createBiquadFilter();
+    pad3Filter.type = 'lowpass';
+    pad3Filter.frequency.value = 1200;
+    pad3Filter.Q.value = 0.8;
+
+    const pad3Gain = audioContext.createGain();
+    pad3Gain.gain.value = 0.05;
+
+    pad3.connect(pad3Filter);
+    pad3Filter.connect(pad3Gain);
+    pad3Gain.connect(masterGain);
+
+    pad1.start();
+    pad2.start();
+    pad3.start();
+
+    pad1OscRef.current = pad1;
+    pad2OscRef.current = pad2;
+    pad3OscRef.current = pad3;
+  };
+
+  const createRhythmicPulse = (audioContext: AudioContext, masterGain: GainNode) => {
+    // Subtle rhythmic pulse for Psy chill vibe
+    const pulseOsc = audioContext.createOscillator();
+    pulseOsc.type = 'sine';
+    pulseOsc.frequency.value = 80;
+
+    const pulseFilter = audioContext.createBiquadFilter();
+    pulseFilter.type = 'bandpass';
+    pulseFilter.frequency.value = 150;
+    pulseFilter.Q.value = 3;
+
+    const pulseGain = audioContext.createGain();
+    pulseGain.gain.value = 0;
+
+    pulseOsc.connect(pulseFilter);
+    pulseFilter.connect(pulseGain);
+    pulseGain.connect(masterGain);
+
+    pulseOsc.start();
+    pulseOscRef.current = pulseOsc;
+
+    // Create rhythmic pulse pattern (Psy chill tempo ~120 BPM)
+    const pulseDuration = 0.15;
+    const pulseInterval = 500; // ms between pulses
+
+    const triggerPulse = () => {
+      if (!audioContextRef.current || !pulseGain) return;
+      
+      const now = audioContextRef.current.currentTime;
+      
+      // Envelope for pulse
+      pulseGain.gain.cancelScheduledValues(now);
+      pulseGain.gain.setValueAtTime(0, now);
+      pulseGain.gain.linearRampToValueAtTime(0.12, now + 0.02);
+      pulseGain.gain.exponentialRampToValueAtTime(0.001, now + pulseDuration);
+    };
+
+    // Start pulse pattern
+    const interval = window.setInterval(() => {
+      triggerPulse();
+    }, pulseInterval);
+
+    pulseIntervalRef.current = interval;
   };
 
   const toggleSound = async () => {
-    if (!isInitialized || !audioContextRef.current || !gainNodeRef.current) return;
+    if (!isInitialized || !audioContextRef.current || !masterGainRef.current) return;
 
     const audioContext = audioContextRef.current;
+    const masterGain = masterGainRef.current;
 
     if (isPlaying) {
-      // Stop all sounds
-      if (noiseNodeRef.current) {
-        noiseNodeRef.current.stop();
-        noiseNodeRef.current = null;
+      // Stop all music layers
+      if (bassOscRef.current) {
+        bassOscRef.current.stop();
+        bassOscRef.current = null;
       }
-      if (oscillatorRef.current) {
-        oscillatorRef.current.stop();
-        oscillatorRef.current = null;
+      if (bassLFORef.current) {
+        bassLFORef.current.stop();
+        bassLFORef.current = null;
       }
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
+      if (pad1OscRef.current) {
+        pad1OscRef.current.stop();
+        pad1OscRef.current = null;
+      }
+      if (pad2OscRef.current) {
+        pad2OscRef.current.stop();
+        pad2OscRef.current = null;
+      }
+      if (pad3OscRef.current) {
+        pad3OscRef.current.stop();
+        pad3OscRef.current = null;
+      }
+      if (pulseOscRef.current) {
+        pulseOscRef.current.stop();
+        pulseOscRef.current = null;
+      }
+      if (pulseIntervalRef.current) {
+        clearInterval(pulseIntervalRef.current);
+        pulseIntervalRef.current = null;
       }
       setIsPlaying(false);
     } else {
@@ -105,47 +238,10 @@ export default function AmbientSound() {
         await audioContext.resume();
       }
 
-      // Start forge heat hum (low frequency noise)
-      const noiseBuffer = createNoiseBuffer(audioContext);
-      const noiseSource = audioContext.createBufferSource();
-      noiseSource.buffer = noiseBuffer;
-      noiseSource.loop = true;
-
-      const noiseFilter = audioContext.createBiquadFilter();
-      noiseFilter.type = 'lowpass';
-      noiseFilter.frequency.value = 600;
-
-      const noiseGain = audioContext.createGain();
-      noiseGain.gain.value = 0.1;
-
-      noiseSource.connect(noiseFilter);
-      noiseFilter.connect(noiseGain);
-      noiseGain.connect(gainNodeRef.current);
-
-      noiseSource.start();
-      noiseNodeRef.current = noiseSource;
-
-      // Start smelting heat hum (deep oscillator)
-      const oscillator = audioContext.createOscillator();
-      oscillator.type = 'sine';
-      oscillator.frequency.value = 45; // Deep forge rumble
-
-      const oscGain = audioContext.createGain();
-      oscGain.gain.value = 0.06;
-
-      oscillator.connect(oscGain);
-      oscGain.connect(gainNodeRef.current);
-
-      oscillator.start();
-      oscillatorRef.current = oscillator;
-
-      // Periodically play metal clinks and ember pops
-      const interval = window.setInterval(() => {
-        if (Math.random() > 0.65) {
-          playMetalClink();
-        }
-      }, 1200);
-      intervalRef.current = interval;
+      // Create all music layers
+      createDeepBassLayer(audioContext, masterGain);
+      createAtmosphericPads(audioContext, masterGain);
+      createRhythmicPulse(audioContext, masterGain);
 
       setIsPlaying(true);
     }
@@ -157,7 +253,7 @@ export default function AmbientSound() {
       size="icon"
       onClick={toggleSound}
       className="relative"
-      title={isPlaying ? 'Mute forge sounds' : 'Play forge sounds'}
+      title={isPlaying ? 'Mute music' : 'Play music'}
       disabled={!isInitialized}
     >
       {isPlaying ? (

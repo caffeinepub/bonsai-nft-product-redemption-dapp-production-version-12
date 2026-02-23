@@ -1,12 +1,12 @@
 # Specification
 
 ## Summary
-**Goal:** Fix NFT minting persistence and collection display so that minted NFTs are properly stored in the backend canister and visible in user collections with their images and metadata.
+**Goal:** Replace forge ambient sounds with deep bass cyberpunk Psy chill background music.
 
 **Planned changes:**
-- Fix backend NFT storage to persist complete metadata, owner Principal, provenance data, and image blob references immediately after minting
-- Ensure getUserNFTs backend function returns all NFTs owned by the requesting user with complete data
-- Fix UserDashboard collection view to properly fetch and display all minted NFTs with images and metadata
-- Verify AdminDashboard mint flow correctly uploads images to blob storage and waits for backend confirmation before showing success
+- Update AmbientSound component to generate deep bass cyberpunk Psy chill music instead of forge sounds (metal clinks, heat hum, noise)
+- Implement synthesized music with deep bass tones, cyberpunk characteristics, and Psy chill atmospheric elements
+- Ensure music plays continuously on loop when enabled via the existing header audio toggle button
+- Maintain volume control and audio context cleanup functionality
 
-**User-visible outcome:** After minting an NFT, users will see it immediately appear in their collection with the uploaded image and all metadata information persisted across page refreshes and canister upgrades.
+**User-visible outcome:** When users enable audio via the header toggle button, they will hear continuous deep bass cyberpunk Psy chill background music instead of forge ambient sounds.

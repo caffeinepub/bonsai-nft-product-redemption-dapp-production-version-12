@@ -1,33 +1,27 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "NFT minting platform with ORIGYN-compliant archival system and forge-themed visuals",
+  "summary": "NFT minting application with provenance display and wallet transfer functionality, featuring deep bass cyberpunk Psy chill music",
   "architectural_notes": [
-    "NFT minting process completes successfully with provenance info",
-    "Current issue: NFTs not appearing in user collections after mint",
-    "Requires persistent storage of NFT data and images in canister",
-    "Collection view needs to fetch and display held NFTs with full metadata"
+    "NFT application with minting capability and metadata management",
+    "Music integration for ambient experience"
   ],
-  "known_issues": [
-    "Minted NFTs do not appear in user collection despite successful mint",
-    "NFT images may not be persisting in canister storage",
-    "Collection view not displaying minted NFT data and images"
-  ],
-  "isFixRequest": true,
+  "known_issues": [],
+  "isFixRequest": false,
   "existing_features": [
     {
-      "id": "feature-fix-the-user-collection-view-in-userdashboard-to-properly-fetch-and-display-all-minted-nfts-with-their-images-and-full-metadata-information",
-      "title": "Fix the user collection view in UserDashboard to properly fetch and display all minted NFTs with their images and full metadata information",
+      "id": "feature-replace-the-existing-forge-ambient-sound-system-with-deep-bass-cyberpunk-psy-chill-background-music-that-plays-continuously-when-the-user-enables-audio-via-the-music-toggle-button-in-the-header",
+      "title": "Replace the existing forge ambient sound system with deep bass cyberpunk Psy chill background music that plays continuously when the user enables audio via the music toggle button in the header",
       "reqIds": [
-        "REQ-3"
+        "REQ-1"
       ],
       "version": 1
     },
     {
-      "id": "feature-verify-that-the-mint-flow-in-admindashboard-correctly-uploads-images-to-backend-blob-storage-and-receives-confirmation-of-successful-nft-creation-before-showing-success-message",
-      "title": "Verify that the mint flow in AdminDashboard correctly uploads images to backend blob storage and receives confirmation of successful NFT creation before showing success message",
+      "id": "feature-update-the-ambientsound-component-to-generate-or-play-deep-bass-cyberpunk-psy-chill-music-instead-of-the-current-forge-ambient-sounds-metal-clinks-heat-hum-noise",
+      "title": "Update the AmbientSound component to generate or play deep bass cyberpunk Psy chill music instead of the current forge ambient sounds (metal clinks, heat hum, noise)",
       "reqIds": [
-        "REQ-4"
+        "REQ-2"
       ],
       "version": 1
     }
@@ -35,40 +29,24 @@
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "Fix NFT persistence - minted NFTs must appear in user collection with images and metadata",
+      "summary": "Display provenance information for NFTs",
       "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-2",
-      "summary": "Ensure NFT images persist in canister storage",
+      "summary": "Add functionality to send/transfer NFTs to another wallet address",
       "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-3",
-      "summary": "Display NFT images and metadata in user collection view",
+      "summary": "Implement deep bass cyberpunk Psy chill background music",
       "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-4",
-      "summary": "Fix the NFT minting process to ensure minted NFTs are properly stored in the backend canister with complete metadata including token ID, owner Principal, provenance data, ORIGYN metadata, and image blob references",
-      "reqIds": [
-        "REQ-1"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-5",
-      "summary": "Ensure getUserNFTs backend function returns all NFTs owned by the requesting user with complete metadata and image blob references",
-      "reqIds": [
-        "REQ-2"
-      ],
       "status": "pending"
     }
   ],
-  "projectName": "Bonsai NFT",
+  "projectName": "Bonsai Forge NFT",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

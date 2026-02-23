@@ -1,52 +1,40 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Fix NFT minting persistence and collection display",
+  "title": "Add deep bass cyberpunk Psy chill background music",
   "requirements": [
     {
-      "id": "REQ-3",
-      "summary": "Fix the user collection view in UserDashboard to properly fetch and display all minted NFTs with their images and full metadata information",
+      "id": "REQ-1",
+      "summary": "Replace the existing forge ambient sound system with deep bass cyberpunk Psy chill background music that plays continuously when the user enables audio via the music toggle button in the header",
       "acceptanceCriteria": [
-        "Collection view fetches NFTs using useUserNFTs query hook",
-        "Each NFT card displays the uploaded image using the blob URL",
-        "NFT metadata is visible including name, description, and provenance details",
-        "Collection updates immediately after successful mint without requiring page refresh",
-        "Images load correctly from canister blob storage",
-        "Loading states and error handling are implemented"
+        "The music has a deep bass character with cyberpunk and Psy chill aesthetic",
+        "Music plays continuously on loop when enabled",
+        "The existing header audio toggle button (XPath: /html[1]/body[1]/div[1]/div[1]/div[1]/header[1]/div[1]/div[1]/div[1]/button[1]) controls the music playback",
+        "Music volume is appropriately balanced for background listening",
+        "Audio stops cleanly when toggled off or component unmounts"
       ],
       "file_operations": [
         {
-          "path": "frontend/src/hooks/useQueries.ts",
+          "path": "frontend/src/components/AmbientSound.tsx",
           "operation": "modify",
-          "description": "Verify and fix the useUserNFTs hook to correctly call the getUserNFTs backend capability and return NFTData[] with complete metadata including id, owner, media_assets (ExternalBlob[]), origyn_metadata, and provenance. Ensure the hook properly handles loading, error states, and is enabled only when actor and authentication are available. Add queryKey ['userNFTs', identity] to ensure refetch on identity change."
-        },
-        {
-          "path": "frontend/src/pages/UserDashboard.tsx",
-          "operation": "modify",
-          "description": "Update the NFT collection display section to use the useUserNFTs hook instead of useOwnedNFTs. For each NFT in the returned NFTData[], render an NFT card that displays: (1) the first media asset image using blob.getDirectURL() for the ExternalBlob, (2) the NFT name from nft.name or nft.origyn_metadata.name, (3) provenance details including product name, batch number, and creation date from nft.provenance, (4) token ID from nft.id. Implement proper loading skeleton states while data is fetching. Add error boundary or error message display if the query fails. Ensure the component properly handles empty arrays (no NFTs) by showing a helpful message like 'No NFTs in your collection yet'."
+          "description": "Replace the current forge ambient sound generation (metal clinks, heat hum, noise) with synthesized deep bass cyberpunk Psy chill music using Web Audio API. Generate deep bass tones (40-80Hz range), atmospheric pads with cyberpunk characteristics, and rhythmic elements with Psy chill vibe. Maintain the existing volume toggle functionality and audio context initialization/cleanup logic. Ensure music loops continuously when enabled and stops cleanly on toggle off or component unmount."
         }
       ]
     },
     {
-      "id": "REQ-4",
-      "summary": "Verify that the mint flow in AdminDashboard correctly uploads images to backend blob storage and receives confirmation of successful NFT creation before showing success message",
+      "id": "REQ-2",
+      "summary": "Update the AmbientSound component to generate or play deep bass cyberpunk Psy chill music instead of the current forge ambient sounds (metal clinks, heat hum, noise)",
       "acceptanceCriteria": [
-        "Image upload completes and returns blob ID before NFT minting",
-        "Mint function waits for backend confirmation before invalidating queries",
-        "Success message only shows after NFT is confirmed stored in backend",
-        "React Query cache is properly invalidated to trigger collection refetch",
-        "Error handling catches and displays any storage failures"
+        "The component generates synthesized deep bass tones with cyberpunk characteristics",
+        "The music has a Psy chill vibe with atmospheric pads and rhythmic elements",
+        "The existing volume toggle functionality remains intact",
+        "Audio context initialization and cleanup logic is preserved"
       ],
       "file_operations": [
         {
-          "path": "frontend/src/pages/AdminDashboard.tsx",
+          "path": "frontend/src/components/AmbientSound.tsx",
           "operation": "modify",
-          "description": "Review and fix the single NFT minting flow to ensure: (1) image files are converted to ExternalBlob using ExternalBlob.fromBytes() before calling mintNFT, (2) the mintNFT mutation awaits the backend response and captures the returned token ID (bigint), (3) success toast is shown only after the backend confirms successful storage with the token ID, (4) React Query invalidation includes both ['userNFTs'] and ['ownedNFTs'] queryKeys to trigger refetch in UserDashboard, (5) error handling wraps the entire flow with try-catch and displays specific error messages for upload failures vs minting failures. Verify the useMintNFT hook in useQueries.ts properly calls actor.mintNFT with the ORIGYNMetadata and ExternalBlob[] parameters."
-        },
-        {
-          "path": "frontend/src/hooks/useQueries.ts",
-          "operation": "modify",
-          "description": "Verify the useMintNFT mutation hook correctly: (1) accepts metadata (ORIGYNMetadata) and mediaAssets (ExternalBlob[]) as parameters, (2) calls actor.mintNFT(metadata, mediaAssets) and awaits the result, (3) returns the token ID (bigint) from the backend, (4) includes onSuccess callback that invalidates ['userNFTs'], ['ownedNFTs'], and ['allNFTs'] queryKeys to trigger refetch across all NFT views. Add proper error handling that throws descriptive errors if the actor is unavailable or the mint fails."
+          "description": "Implement synthesized music generation using Web Audio API oscillators, filters, and gain nodes. Create deep bass layer using sine/sawtooth oscillators in 40-80Hz range. Add atmospheric pad layer with detuned oscillators and low-pass filters for cyberpunk ambience. Implement rhythmic pulse elements with envelope automation for Psy chill character. Use OscillatorNode, BiquadFilterNode, and GainNode to craft the soundscape. Preserve the existing volume control mechanism and ensure proper audio context cleanup on unmount."
         }
       ]
     }
