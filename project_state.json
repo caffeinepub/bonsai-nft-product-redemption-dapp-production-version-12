@@ -1,0 +1,49 @@
+{
+  "schemaVersion": "1.0.0",
+  "projectStateVersion": 3,
+  "summary": "NFT gallery app with provenance tracking, wallet transfer, cyberpunk music, and discount code redemption flow. Fixing provenance card not opening on NFT selection, and restricting discount code visibility to redemption only.",
+  "architectural_notes": [
+    "Provenance display and wallet transfer functionality introduced in Version 21",
+    "Discount code must be hidden until user triggers redemption action"
+  ],
+  "known_issues": [
+    "Provenance card not opening or detailed provenance not showing when an NFT is selected"
+  ],
+  "isFixRequest": true,
+  "existing_features": [
+    {
+      "id": "feature-fix-the-provenance-card-detail-view-so-that-clicking-on-an-nft-in-the-gallery-or-user-dashboard-reliably-opens-the-detailed-provenance-panel-showing-creator-transfer-history-timestamps-and-wallet-addresses-involved-in-each-transfer",
+      "title": "Fix the provenance card/detail view so that clicking on an NFT in the gallery or user dashboard reliably opens the detailed provenance panel, showing creator, transfer history, timestamps, and wallet addresses involved in each transfer.",
+      "reqIds": [
+        "REQ-1"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-restrict-the-discount-code-so-it-is-only-displayed-at-the-moment-of-successful-nft-redemption-the-discount-code-must-not-be-visible-on-the-nft-card-nft-detail-view-dashboard-or-anywhere-else-prior-to-redemption",
+      "title": "Restrict the discount code so it is only displayed at the moment of successful NFT redemption. The discount code must not be visible on the NFT card, NFT detail view, dashboard, or anywhere else prior to redemption.",
+      "reqIds": [
+        "REQ-2"
+      ],
+      "version": 1
+    }
+  ],
+  "new_feature_requests": [
+    {
+      "id": "AR-1",
+      "summary": "Fix provenance card not opening / NFT detailed provenance not showing when selected",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-2",
+      "summary": "Discount code should only be visible upon redemption, not before",
+      "reqIds": [],
+      "status": "pending"
+    }
+  ],
+  "gameProjectType": "none",
+  "projectName": "BonsaiNFT Forge",
+  "clarification_mode": "instant",
+  "clarification_rounds": 0
+}

@@ -1,0 +1,50 @@
+{
+  "kind": "feature_evidence_report",
+  "features": [
+    {
+      "featureId": "feature-fix-the-provenance-card-detail-view-so-that-clicking-on-an-nft-in-the-gallery-or-user-dashboard-reliably-opens-the-detailed-provenance-panel-showing-creator-transfer-history-timestamps-and-wallet-addresses-involved-in-each-transfer",
+      "featureTitle": "Fix the provenance card/detail view so that clicking on an NFT in the gallery or user dashboard reliably opens the detailed provenance panel, showing creator, transfer history, timestamps, and wallet addresses involved in each transfer.",
+      "files": [
+        "frontend/src/components/NFTDetailModal.tsx",
+        "frontend/src/hooks/useQueries.ts",
+        "frontend/src/pages/UserDashboard.tsx"
+      ],
+      "components": [
+        "authorization@1.0.1",
+        "blob-storage@2.0.3",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-1"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-restrict-the-discount-code-so-it-is-only-displayed-at-the-moment-of-successful-nft-redemption-the-discount-code-must-not-be-visible-on-the-nft-card-nft-detail-view-dashboard-or-anywhere-else-prior-to-redemption",
+      "featureTitle": "Restrict the discount code so it is only displayed at the moment of successful NFT redemption. The discount code must not be visible on the NFT card, NFT detail view, dashboard, or anywhere else prior to redemption.",
+      "files": [
+        "frontend/src/components/NFTDetailModal.tsx",
+        "frontend/src/components/RedemptionConfirmationModal.tsx",
+        "frontend/src/pages/TrophyRoom.tsx",
+        "frontend/src/pages/UserDashboard.tsx"
+      ],
+      "components": [
+        "authorization@1.0.1",
+        "blob-storage@2.0.3",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-2"
+      ],
+      "confidence": "high"
+    }
+  ]
+}

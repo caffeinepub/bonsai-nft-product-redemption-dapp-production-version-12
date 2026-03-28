@@ -1,0 +1,76 @@
+{
+  "kind": "implementation_plan",
+  "version": "1.0",
+  "title": "Fix provenance card display and restrict discount code visibility to redemption only",
+  "requirements": [
+    {
+      "id": "REQ-1",
+      "summary": "Fix the provenance card/detail view so that clicking on an NFT in the gallery or user dashboard reliably opens the detailed provenance panel, showing creator, transfer history, timestamps, and wallet addresses involved in each transfer.",
+      "acceptanceCriteria": [
+        "Clicking any NFT card opens a detail panel or modal containing its provenance data.",
+        "The provenance section displays original creator, all prior owners, transfer timestamps, and wallet addresses.",
+        "The detail view opens consistently without requiring a page refresh.",
+        "Closing the detail view returns the user to the gallery/dashboard without data loss."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/UserDashboard.tsx",
+          "operation": "modify",
+          "description": "Add NFT detail modal state management and click handlers to NFT cards. Ensure clicking any NFT card opens a detailed provenance panel that displays the original creator, transfer history, timestamps, and wallet addresses. The modal should open consistently without requiring page refresh and close gracefully without data loss. Wire the modal state to the NFT card click events in the collection tab."
+        },
+        {
+          "path": "frontend/src/components/NFTDetailModal.tsx",
+          "operation": "create",
+          "description": "Create a modal component that displays detailed NFT provenance information. Include sections for: NFT metadata (name, collection, product), original creator with timestamp, complete transfer history showing all prior owners with timestamps and wallet addresses, and current owner. Use the backend's getTransactionHistory to fetch transaction records filtered by nftId. Display timestamps in human-readable format. Include a close button that returns to the dashboard view."
+        },
+        {
+          "path": "frontend/src/pages/HomePage.tsx",
+          "operation": "modify",
+          "description": "Add click handlers to NFT preview cards in the gallery section. When a user clicks an NFT card, open the NFT detail modal (same component used in UserDashboard) to show provenance information. Ensure the modal opens reliably without page refresh. For unauthenticated users, show a prompt to log in to view full details."
+        },
+        {
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Add a React Query hook useGetNFTTransactionHistory that accepts an nftId parameter and fetches transaction history for a specific NFT using the backend's getTransactionHistory method. Filter the returned transactions to only include those matching the provided nftId. Enable the query only when nftId is provided and actor is available. Return transaction records with proper TypeScript types (PublicTransactionRecord)."
+        }
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "summary": "Restrict the discount code so it is only displayed at the moment of successful NFT redemption. The discount code must not be visible on the NFT card, NFT detail view, dashboard, or anywhere else prior to redemption.",
+      "acceptanceCriteria": [
+        "The discount code field is not rendered on the NFT card, gallery view, or detail panel before redemption.",
+        "After a user successfully redeems an NFT, the discount code is shown in the redemption confirmation UI.",
+        "The backend only returns the discount code as part of the redemption response, not in general NFT metadata queries.",
+        "Re-viewing a previously redeemed NFT (e.g., in redemption history) may display the code, but unredeemed NFTs must never expose it."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/NFTDetailModal.tsx",
+          "operation": "modify",
+          "description": "Remove any display of discount code field from the NFT detail modal. Ensure the modal only shows provenance information (creator, transfer history, timestamps, wallet addresses) and never renders the discount code, even if present in the metadata. Do not access or display any discountCode property from NFT metadata."
+        },
+        {
+          "path": "frontend/src/pages/UserDashboard.tsx",
+          "operation": "modify",
+          "description": "Remove discount code display from NFT cards and collection view. Ensure NFT cards only show name, collection, product, and redeemed status without exposing the discount code. In the redemption flow, after successful redemption, display the discount code in a prominent confirmation message or success modal. The code should only appear in the post-redemption confirmation UI, not in any preview or detail views."
+        },
+        {
+          "path": "frontend/src/pages/TrophyRoom.tsx",
+          "operation": "modify",
+          "description": "Remove any discount code display from the trophy room NFT hover or selection states. Ensure the 3D interactive view only shows NFT name, product, and provenance information without exposing discount codes. If previously redeemed NFTs are shown with codes in this view, remove that functionality."
+        },
+        {
+          "path": "frontend/src/components/RedemptionConfirmationModal.tsx",
+          "operation": "create",
+          "description": "Create a modal component that displays after successful NFT redemption. Show the discount code prominently along with redemption success message, timestamp, and NFT details. Include instructions for using the discount code. This is the only place where the discount code should be visible to users. Accept redemption record data as props and display the discountCode field from the RedemptionRecord type."
+        },
+        {
+          "path": "frontend/src/pages/HomePage.tsx",
+          "operation": "modify",
+          "description": "Remove any discount code display from the public gallery view and NFT preview cards. Ensure the homepage NFT showcase does not expose discount codes in any form, whether in card previews, hover states, or detail views."
+        }
+      ]
+    }
+  ]
+}

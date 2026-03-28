@@ -1,0 +1,48 @@
+{
+  "kind": "spec_vs_diff_report",
+  "version": "1.0",
+  "generatedAt": "2026-02-24T22:00:28.498Z",
+  "summary": "The diff implements both REQ-1 (provenance card/detail view) and REQ-2 (discount code restriction). REQ-1 is addressed via a new NFTDetailModal component with provenance data, transaction history, and consistent open/close behavior across UserDashboard and TrophyRoom. REQ-2 is addressed by removing discountCode from PublicNFTData/PublicORIGYNMetadata types, only returning it in the redemption response (burnNFT), and showing it exclusively in RedemptionConfirmationModal. Overall coverage is strong with only minor verification gaps due to file truncation.",
+  "missing_requirements": [
+    {
+      "id": "REQ-1",
+      "requirement": "The provenance section displays original creator, all prior owners, transfer timestamps, and wallet addresses.",
+      "reason": "NFTDetailModal.tsx is truncated and the gallery/HomePage view is not shown opening a detail modal — it is unclear if the gallery (HomePage) wires up NFT card clicks to open the detail modal, since only UserDashboard and TrophyRoom are confirmed to use NFTDetailModal.",
+      "evidence": [
+        "frontend/src/pages/UserDashboard.tsx",
+        "frontend/src/pages/TrophyRoom.tsx",
+        "frontend/src/components/NFTDetailModal.tsx"
+      ]
+    }
+  ],
+  "hallucinated_features": [
+    {
+      "description": "A backend migration module (migration.mo) was added defining old/new data schema types and a migration function, including a PublicORIGYNMetadata type without discountCode.",
+      "reason": "While schema migration supports REQ-2 indirectly, introducing a dedicated migration.mo file was not explicitly requested in the build requirements.",
+      "evidence": [
+        "backend/migration.mo"
+      ]
+    },
+    {
+      "description": "RedemptionConfirmationModal includes a clipboard copy button with animated feedback for copying the discount code.",
+      "reason": "The copy-to-clipboard feature was not mentioned in the requirements or acceptance criteria — only showing the discount code after redemption was requested.",
+      "evidence": [
+        "frontend/src/components/RedemptionConfirmationModal.tsx"
+      ]
+    }
+  ],
+  "confidence": 0.78,
+  "changed_files": [
+    "backend/main.mo",
+    "backend/migration.mo",
+    "frontend-file-summaries.txt",
+    "frontend/src/App.tsx",
+    "frontend/src/components/NFTDetailModal.tsx",
+    "frontend/src/components/RedemptionConfirmationModal.tsx",
+    "frontend/src/components/TransparencyDashboard.tsx",
+    "frontend/src/hooks/useQueries.ts",
+    "frontend/src/pages/TrophyRoom.tsx",
+    "frontend/src/pages/UserDashboard.tsx",
+    "project_state.json"
+  ]
+}

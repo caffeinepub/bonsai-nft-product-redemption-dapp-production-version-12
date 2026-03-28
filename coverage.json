@@ -1,0 +1,73 @@
+{
+  "kind": "coverage_report",
+  "version": "1.0",
+  "generatedAt": "2026-02-24T22:00:28.503Z",
+  "sources": {
+    "buildRequest": true,
+    "implementationPlan": true
+  },
+  "requirements": {
+    "total": 2,
+    "implemented": 2,
+    "items": [
+      {
+        "id": "REQ-1",
+        "summary": "Fix the provenance card/detail view so that clicking on an NFT in the gallery or user dashboard reliably opens the detailed provenance panel, showing creator, transfer history, timestamps, and wallet addresses involved in each transfer.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/pages/UserDashboard.tsx",
+          "frontend/src/components/NFTDetailModal.tsx",
+          "frontend/src/pages/HomePage.tsx",
+          "frontend/src/hooks/useQueries.ts"
+        ],
+        "matchedFiles": [
+          "frontend/src/pages/UserDashboard.tsx",
+          "frontend/src/components/NFTDetailModal.tsx",
+          "frontend/src/hooks/useQueries.ts"
+        ]
+      },
+      {
+        "id": "REQ-2",
+        "summary": "Restrict the discount code so it is only displayed at the moment of successful NFT redemption. The discount code must not be visible on the NFT card, NFT detail view, dashboard, or anywhere else prior to redemption.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/components/NFTDetailModal.tsx",
+          "frontend/src/pages/UserDashboard.tsx",
+          "frontend/src/pages/TrophyRoom.tsx",
+          "frontend/src/components/RedemptionConfirmationModal.tsx",
+          "frontend/src/pages/HomePage.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/components/NFTDetailModal.tsx",
+          "frontend/src/pages/UserDashboard.tsx",
+          "frontend/src/pages/TrophyRoom.tsx",
+          "frontend/src/components/RedemptionConfirmationModal.tsx"
+        ]
+      }
+    ]
+  },
+  "changedFiles": [
+    "backend/main.mo",
+    "backend/migration.mo",
+    "build-request.json",
+    "caffeine.lock.json",
+    "feature_evidence.json",
+    "frontend-file-summaries.txt",
+    "frontend-implementation-plan.json",
+    "frontend/src/App.tsx",
+    "frontend/src/backend.d.ts",
+    "frontend/src/backend.ts",
+    "frontend/src/components/NFTDetailModal.tsx",
+    "frontend/src/components/RedemptionConfirmationModal.tsx",
+    "frontend/src/components/TransparencyDashboard.tsx",
+    "frontend/src/declarations/backend.did.d.ts",
+    "frontend/src/declarations/backend.did.js",
+    "frontend/src/hooks/useQueries.ts",
+    "frontend/src/pages/TrophyRoom.tsx",
+    "frontend/src/pages/UserDashboard.tsx",
+    "project_state.json",
+    "scratch/component-selection.json",
+    "spec.md",
+    "spec_vs_diff_report.json"
+  ]
+}

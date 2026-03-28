@@ -1,0 +1,63 @@
+{
+  "kind": "build_request",
+  "title": "Fix provenance card display and restrict discount code visibility to redemption only",
+  "projectName": "BonsaiNFT Forge",
+  "priority": "normal",
+  "requirements": [
+    {
+      "id": "REQ-1",
+      "text": "Fix the provenance card/detail view so that clicking on an NFT in the gallery or user dashboard reliably opens the detailed provenance panel, showing creator, transfer history, timestamps, and wallet addresses involved in each transfer.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-6",
+          "msg-8"
+        ],
+        "quotes": [
+          "did we resolve the issue we were having with the provenance card not opening or the NFTs not showing the detailed provenance when selected?",
+          "yes. the discount code should only be viewable upon redemption."
+        ]
+      },
+      "acceptanceCriteria": [
+        "Clicking any NFT card opens a detail panel or modal containing its provenance data.",
+        "The provenance section displays original creator, all prior owners, transfer timestamps, and wallet addresses.",
+        "The detail view opens consistently without requiring a page refresh.",
+        "Closing the detail view returns the user to the gallery/dashboard without data loss."
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "text": "Restrict the discount code so it is only displayed at the moment of successful NFT redemption. The discount code must not be visible on the NFT card, NFT detail view, dashboard, or anywhere else prior to redemption.",
+      "target": "both",
+      "source": {
+        "messageIds": [
+          "msg-9"
+        ],
+        "quotes": [
+          "yes. the discount code should only be viewable upon redemption."
+        ]
+      },
+      "acceptanceCriteria": [
+        "The discount code field is not rendered on the NFT card, gallery view, or detail panel before redemption.",
+        "After a user successfully redeems an NFT, the discount code is shown in the redemption confirmation UI.",
+        "The backend only returns the discount code as part of the redemption response, not in general NFT metadata queries.",
+        "Re-viewing a previously redeemed NFT (e.g., in redemption history) may display the code, but unredeemed NFTs must never expose it."
+      ]
+    }
+  ],
+  "constraints": [
+    "Do not alter immutable frontend paths: useInternetIdentity.ts, useActor.ts, main.tsx, or components/ui.",
+    "All backend logic must remain within the single main.mo actor.",
+    "Discount code must not be exposed in any NFT metadata query that runs before redemption."
+  ],
+  "nonGoals": [
+    "Redesigning the overall NFT gallery UI or navigation.",
+    "Adding new redemption flow steps beyond what already exists.",
+    "Changing the music or ambient sound components.",
+    "Modifying the admin dashboard functionality."
+  ],
+  "imageRequirements": {
+    "required": [],
+    "edits": []
+  }
+}
